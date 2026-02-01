@@ -730,7 +730,7 @@ async def log_command(request: Request):
         # Also log to file
         log_file = os.path.join(LOG_DIR, f"commands_{datetime.now().strftime('%Y%m%d')}.log")
         with open(log_file, 'a') as f:
-            f.write(f"{datetime.now().isoformat()} | {ip} | {status} | {message[:50]}\\n")
+            f.write(f"{datetime.now().isoformat()} | {ip} | {status} | {message[:50]}\n")
         
         return {"status": "logged"}
         
@@ -821,15 +821,15 @@ async def monitor_dashboard(request: Request):
             
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-value">{db.get("stats", {{}}).get("total_requests", 0)}</div>
+                    <div class="stat-value">{db.get("stats", {}).get("total_requests", 0)}</div>
                     <div class="stat-label">Total Requests</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">{db.get("stats", {{}}).get("unique_ips", 0)}</div>
+                    <div class="stat-value">{db.get("stats", {}).get("unique_ips", 0)}</div>
                     <div class="stat-label">Unique Users</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">{db.get("stats", {{}}).get("successful_requests", 0)}</div>
+                    <div class="stat-value">{db.get("stats", {}).get("successful_requests", 0)}</div>
                     <div class="stat-label">Successful</div>
                 </div>
                 <div class="stat-card">
@@ -1175,7 +1175,7 @@ setup_web_interface() {
                 const welcomeMsg = {
                     id: Date.now(),
                     role: 'ai',
-                    content: 'Halo! Saya adalah **RIELLIONA AI**, asisten pribadi Anda.\\n\\nSaya berjalan 100% di VPS pribadi dengan model AI canggih. Saya bisa membantu dengan:\\n\\n• Programming & kode\\n• Analisis & riset\\n• Penulisan konten\\n• Problem solving\\n\\nApa yang bisa saya bantu hari ini?',
+                    content: 'Halo! Saya adalah **RIELLIONA AI**, asisten pribadi Anda.\n\nSaya berjalan 100% di VPS pribadi dengan model AI canggih. Saya bisa membantu dengan:\n\n• Programming & kode\n• Analisis & riset\n• Penulisan konten\n• Problem solving\n\nApa yang bisa saya bantu hari ini?',
                     timestamp: new Date().toISOString()
                 };
                 chatHistory.push(welcomeMsg);
@@ -1198,15 +1198,15 @@ setup_web_interface() {
                     minute: '2-digit' 
                 });
                 
-                messageDiv.innerHTML = \`
+                messageDiv.innerHTML = `
                     <div class="flex items-center mb-3">
                         <div class="font-bold mr-3">
-                            \${msg.role === 'user' ? '👤 Anda' : '🤖 RIELLIONA AI'}
+                            ${msg.role === 'user' ? '👤 Anda' : '🤖 RIELLIONA AI'}
                         </div>
-                        <div class="text-sm opacity-75">\${time}</div>
+                        <div class="text-sm opacity-75">${time}</div>
                     </div>
-                    <div class="whitespace-pre-wrap leading-relaxed">\${msg.content}</div>
-                \`;
+                    <div class="whitespace-pre-wrap leading-relaxed">${msg.content}</div>
+                `;
                 
                 chatContainer.appendChild(messageDiv);
             });
@@ -1220,7 +1220,7 @@ setup_web_interface() {
             const typingDiv = document.createElement('div');
             typingDiv.className = 'message-ai p-6 shadow-lg';
             typingDiv.id = 'typingIndicator';
-            typingDiv.innerHTML = \`
+            typingDiv.innerHTML = `
                 <div class="flex items-center mb-3">
                     <div class="font-bold mr-3">🤖 RIELLIONA AI</div>
                     <div class="typing-dots">
@@ -1229,7 +1229,7 @@ setup_web_interface() {
                         <span>●</span>
                     </div>
                 </div>
-            \`;
+            `;
             chatContainer.appendChild(typingDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
@@ -1289,7 +1289,7 @@ setup_web_interface() {
             
             try {
                 // Send to API
-                const response = await fetch(\`\${API_BASE}/chat\`, {
+                const response = await fetch(`${API_BASE}/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1303,10 +1303,10 @@ setup_web_interface() {
                 // Calculate response time
                 const endTime = Date.now();
                 const processTime = (endTime - startTime) / 1000;
-                responseTime.textContent = \`\${processTime.toFixed(2)}s\`;
+                responseTime.textContent = `${processTime.toFixed(2)}s`;
                 
                 if (!response.ok) {
-                    throw new Error(\`API error: \${response.status}\`);
+                    throw new Error(`API error: ${response.status}`);
                 }
                 
                 const data = await response.json();
@@ -1328,7 +1328,7 @@ setup_web_interface() {
                 
                 // Update token count
                 if (data.tokens) {
-                    tokenCount.textContent = \`\${data.tokens} tokens\`;
+                    tokenCount.textContent = `${data.tokens} tokens`;
                 }
                 
             } catch (error) {
@@ -1339,7 +1339,7 @@ setup_web_interface() {
                 const errorMsg = {
                     id: Date.now() + 1,
                     role: 'ai',
-                    content: \`Maaf, terjadi error: \${error.message}\\n\\nSilakan coba lagi atau refresh halaman.\`,
+                    content: `Maaf, terjadi error: ${error.message}\n\nSilakan coba lagi atau refresh halaman.`,
                     timestamp: new Date().toISOString()
                 };
                 
@@ -1377,7 +1377,7 @@ setup_web_interface() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = \`rielliona-chat-\${new Date().toISOString().split('T')[0]}.json\`;
+            a.download = `rielliona-chat-${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1393,17 +1393,148 @@ HTML_FILE
     success "Web interface created"
 }
 
-setup_nginx() {
-    header "CONFIGURING NGINX"
+setup_nginx_without_ssl() {
+    header "CONFIGURING NGINX (HTTP ONLY)"
     
     # Backup existing default config
     if [ -f /etc/nginx/sites-available/default ]; then
         cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
     fi
     
-    log "Creating Nginx configuration..."
+    log "Creating Nginx configuration (HTTP only)..."
     cat > /etc/nginx/sites-available/rielliona << NGINX_CONFIG
-# RIELLIONA AI - Main Configuration
+# RIELLIONA AI - HTTP Configuration
+# SSL will be added later by Certbot
+
+server {
+    listen 80;
+    server_name $DOMAIN;
+    
+    # Security Headers
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Referrer-Policy "strict-origin-when-cross-origin";
+    
+    # Web Interface
+    location / {
+        root /var/www/rielliona;
+        index index.html;
+        try_files \$uri \$uri/ =404;
+        
+        # Cache static assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+    
+    # API Proxy
+    location /api/ {
+        proxy_pass http://127.0.0.1:5000/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        
+        # Timeouts for AI processing
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 75s;
+        proxy_send_timeout 300s;
+        
+        # Buffering optimizations
+        proxy_buffering off;
+        proxy_request_buffering off;
+    }
+    
+    # Monitoring Dashboard (Password Protected)
+    location /monitor/ {
+        proxy_pass http://127.0.0.1:5001/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        
+        # Basic Authentication
+        auth_basic "RIELLIONA AI Monitoring";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        
+        # Caching
+        proxy_cache off;
+        proxy_buffering off;
+    }
+    
+    # Ollama API (Optional)
+    location /ollama/ {
+        proxy_pass http://127.0.0.1:11434/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host \$host;
+        
+        # No buffering for streaming
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 3600s;
+    }
+    
+    # Status endpoint (no auth)
+    location /status {
+        proxy_pass http://127.0.0.1:5000/status;
+        proxy_set_header Host \$host;
+        access_log off;
+    }
+    
+    # Deny access to hidden files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+}
+NGINX_CONFIG
+    
+    # Enable site
+    ln -sf /etc/nginx/sites-available/rielliona /etc/nginx/sites-enabled/
+    rm -f /etc/nginx/sites-enabled/default
+    
+    # Create basic auth for monitoring
+    echo "admin:\$(openssl passwd -crypt rielliona2024)" > /etc/nginx/.htpasswd
+    chmod 644 /etc/nginx/.htpasswd
+    
+    # Test configuration
+    if nginx -t; then
+        systemctl restart nginx
+        success "Nginx configured successfully (HTTP only)"
+    else
+        error "Nginx configuration test failed!"
+        exit 1
+    fi
+}
+
+setup_ssl() {
+    header "SETTING UP SSL CERTIFICATE"
+    
+    log "Checking if port 80 is accessible..."
+    
+    # Stop Nginx temporarily for certbot standalone mode
+    systemctl stop nginx
+    
+    log "Requesting SSL certificate from Let's Encrypt..."
+    
+    if certbot certonly --standalone -d "$DOMAIN" --non-interactive --agree-tos -m "$EMAIL" --preferred-challenges http; then
+        success "SSL certificate obtained successfully"
+        
+        # Update Nginx config to use SSL
+        log "Updating Nginx configuration for SSL..."
+        cat > /etc/nginx/sites-available/rielliona << NGINX_CONFIG
+# RIELLIONA AI - SSL Configuration
 server {
     listen 80;
     server_name $DOMAIN;
@@ -1414,7 +1545,7 @@ server {
     listen 443 ssl http2;
     server_name $DOMAIN;
     
-    # SSL Configuration (will be filled by Certbot)
+    # SSL Configuration
     ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
     
@@ -1515,39 +1646,25 @@ server {
     }
 }
 NGINX_CONFIG
-    
-    # Enable site
-    ln -sf /etc/nginx/sites-available/rielliona /etc/nginx/sites-enabled/
-    rm -f /etc/nginx/sites-enabled/default
-    
-    # Create basic auth for monitoring
-    echo "admin:\$(openssl passwd -crypt rielliona2024)" > /etc/nginx/.htpasswd
-    chmod 644 /etc/nginx/.htpasswd
-    
-    # Test configuration
-    if nginx -t; then
-        systemctl restart nginx
-        success "Nginx configured successfully"
-    else
-        error "Nginx configuration test failed!"
-        exit 1
-    fi
-}
-
-setup_ssl() {
-    header "SETTING UP SSL CERTIFICATE"
-    
-    log "Requesting SSL certificate from Let's Encrypt..."
-    
-    if certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$EMAIL" --redirect; then
-        success "SSL certificate installed successfully"
         
-        # Setup auto-renewal
-        (crontab -l 2>/dev/null; echo "0 3 * * * /usr/bin/certbot renew --quiet") | crontab -
-        success "SSL auto-renewal configured"
+        # Restart Nginx
+        systemctl start nginx
+        
+        if nginx -t; then
+            systemctl reload nginx
+            success "SSL certificate installed successfully"
+            
+            # Setup auto-renewal
+            (crontab -l 2>/dev/null; echo "0 3 * * * /usr/bin/certbot renew --quiet --pre-hook 'systemctl stop nginx' --post-hook 'systemctl start nginx'") | crontab -
+            success "SSL auto-renewal configured"
+        else
+            error "Nginx configuration test failed after SSL setup!"
+            systemctl start nginx  # Restart nginx anyway
+        fi
     else
         warning "SSL setup failed, continuing with HTTP only"
         warning "You can manually run: certbot --nginx -d $DOMAIN"
+        systemctl start nginx  # Restart nginx
     fi
 }
 
@@ -1568,9 +1685,12 @@ echo "  Monitoring:          \$(systemctl is-active rielliona-monitor 2>/dev/nul
 echo "  Nginx:               \$(systemctl is-active nginx 2>/dev/null || echo 'not installed')"
 echo ""
 echo "Access Information:"
-echo "  Web Interface:       https://$DOMAIN"
-echo "  API Endpoint:        https://$DOMAIN/api"
-echo "  Monitoring:          https://$DOMAIN/monitor"
+echo "  Web Interface:       http://$DOMAIN"
+if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+    echo "  Web Interface (SSL): https://$DOMAIN"
+fi
+echo "  API Endpoint:        http://$DOMAIN/api"
+echo "  Monitoring:          http://$DOMAIN/monitor"
 echo "  Monitor Username:    admin"
 echo "  Monitor Password:    rielliona2024"
 echo ""
@@ -1602,7 +1722,11 @@ systemctl start rielliona-api
 systemctl start rielliona-monitor
 systemctl start nginx
 echo "All services started!"
-echo "Access: https://$DOMAIN"
+if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+    echo "Access: https://$DOMAIN"
+else
+    echo "Access: http://$DOMAIN"
+fi
 START_CMD
     
     # Stop command
@@ -1664,12 +1788,15 @@ LOGS_CMD
 #!/bin/bash
 echo "RIELLIONA AI Monitoring System"
 echo ""
-echo "Dashboard: https://$DOMAIN/monitor"
+echo "Dashboard: http://$DOMAIN/monitor"
+if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+    echo "Dashboard (SSL): https://$DOMAIN/monitor"
+fi
 echo "Username: admin"
 echo "Password: rielliona2024"
 echo ""
 echo "Quick Stats:"
-curl -s https://$DOMAIN/api/status | python3 -m json.tool 2>/dev/null || echo "API not available"
+curl -s http://$DOMAIN/api/status | python3 -m json.tool 2>/dev/null || echo "API not available"
 MONITOR_CMD
     
     # Uninstall command
@@ -1788,10 +1915,11 @@ finalize_installation() {
 - Script Version: $SCRIPT_VERSION
 
 ## ACCESS URLs
-- Web Interface: https://$DOMAIN
-- API Endpoint: https://$DOMAIN/api
-- Monitoring Dashboard: https://$DOMAIN/monitor
-- API Status: https://$DOMAIN/api/status
+- Web Interface: http://$DOMAIN
+$(if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then echo "- Web Interface (SSL): https://$DOMAIN"; fi)
+- API Endpoint: http://$DOMAIN/api
+- Monitoring Dashboard: http://$DOMAIN/monitor
+- API Status: http://$DOMAIN/api/status
 
 ## CREDENTIALS
 - Monitoring Dashboard:
@@ -1822,7 +1950,7 @@ finalize_installation() {
 ## TESTING
 Test API with curl:
 \`\`\`bash
-curl -X POST https://$DOMAIN/api/chat \\
+curl -X POST http://$DOMAIN/api/chat \\
   -H "Content-Type: application/json" \\
   -d '{"message": "Hello, introduce yourself"}'
 \`\`\`
@@ -1844,7 +1972,7 @@ curl -X POST https://$DOMAIN/api/chat \\
 
 ## SECURITY NOTES
 - Firewall configured (UFW)
-- SSL/TLS enabled
+$(if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then echo "- SSL/TLS enabled"; else echo "- SSL/TLS not enabled (run certbot later)"; fi)
 - Monitoring password protected
 - No external telemetry
 - All data stored locally
@@ -1866,16 +1994,19 @@ show_completion() {
     echo "╚══════════════════════════════════════════════════════╝"
     echo ""
     echo "✅ INSTALLATION SUMMARY:"
-    echo "   Domain:         https://$DOMAIN"
+    echo "   Domain:         http://$DOMAIN"
+    if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+        echo "   Domain (SSL):   https://$DOMAIN"
+    fi
     echo "   AI Model:       $MODEL_NAME"
-    echo "   Monitoring:     https://$DOMAIN/monitor"
+    echo "   Monitoring:     http://$DOMAIN/monitor"
     echo "   VPS Spec:       16GB RAM, 8 vCPU, DigitalOcean"
     echo "   Owner:          rielliona"
     echo ""
     echo "🚀 QUICK START:"
-    echo "   1. Open: https://$DOMAIN"
+    echo "   1. Open: http://$DOMAIN"
     echo "   2. Start chatting with your AI assistant!"
-    echo "   3. Monitor activity at: https://$DOMAIN/monitor"
+    echo "   3. Monitor activity at: http://$DOMAIN/monitor"
     echo ""
     echo "🔧 MANAGEMENT COMMANDS:"
     echo "   rielliona-status      - Check system status"
@@ -1894,16 +2025,23 @@ show_completion() {
     echo "   • Auto-log rotation (30 days)"
     echo ""
     echo "🔒 SECURITY:"
-    echo "   • SSL/TLS enabled"
     echo "   • Firewall configured"
+    if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+        echo "   • SSL/TLS enabled"
+    else
+        echo "   • SSL/TLS not enabled (run certbot later)"
+    fi
     echo "   • Monitoring password protected"
     echo "   • No data leaves your VPS"
     echo ""
     echo "📝 NEXT STEPS:"
-    echo "   1. Bookmark: https://$DOMAIN"
-    echo "   2. Change monitoring password"
-    echo "   3. Set up regular backups"
-    echo "   4. Monitor resource usage"
+    echo "   1. Bookmark: http://$DOMAIN"
+    if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+        echo "   2. Enable SSL: certbot --nginx -d $DOMAIN"
+    fi
+    echo "   3. Change monitoring password"
+    echo "   4. Set up regular backups"
+    echo "   5. Monitor resource usage"
     echo ""
     echo "🛠️  SUPPORT:"
     echo "   • Logs: /var/log/rielliona/"
@@ -1917,13 +2055,18 @@ show_completion() {
     
     # Show sample monitoring output
     echo "📈 SAMPLE MONITORING OUTPUT:"
-    echo "   $(curl -s ifconfig.me): Hello AI - status = success"
-    echo "   $(curl -s ifconfig.me): Buatkan script - status = success"
-    echo "   $(curl -s ifconfig.me): Test error - status = error"
+    echo "   $(curl -s ifconfig.me 2>/dev/null || echo "127.0.0.1"): Hello AI - status = success"
+    echo "   $(curl -s ifconfig.me 2>/dev/null || echo "127.0.0.1"): Buatkan script - status = success"
+    echo "   $(curl -s ifconfig.me 2>/dev/null || echo "127.0.0.1"): Test error - status = error"
     echo ""
     
     # Final message
-    success "Your personal AI is now ready at https://$DOMAIN"
+    if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+        success "Your personal AI is now ready at https://$DOMAIN"
+    else
+        success "Your personal AI is now ready at http://$DOMAIN"
+        warning "SSL not enabled. To enable SSL, run: certbot --nginx -d $DOMAIN"
+    fi
     echo ""
     echo "Installation log: $LOG_FILE"
     echo "Start time: $(date)"
@@ -2113,7 +2256,7 @@ BANNER
     echo ""
     log "Starting installation process..."
     
-    # Run all installation steps
+    # Run all installation steps with corrected order
     install_dependencies
     setup_firewall
     setup_swap
@@ -2123,11 +2266,11 @@ BANNER
     create_api_server
     create_monitoring_system
     setup_web_interface
-    setup_nginx
-    setup_ssl
+    setup_nginx_without_ssl  # Changed to setup without SSL first
     create_management_tools
     setup_logging
     start_services
+    setup_ssl  # SSL setup after nginx is running
     finalize_installation
     
     # Show completion
