@@ -6,15 +6,10 @@ set -e
 ########################################################
 # 
 #    Pterodactyl AnimatedGraphics Theme Installer
-#         Optimized for v1.12.0
+#         Universal Version (v1.8.x - Latest)
 #
 #         Original theme by Ferks-FK
-#         Script modified for Pterodactyl v1.12.0
-#
-#         Key Changes in v1.12.0:
-#         - Node.js 22 required (was 14/18)
-#         - Security CVE patches
-#         - Updated dependencies
+#         Modified for ALL modern versions
 #
 #            Protected by MIT License
 #
@@ -23,8 +18,7 @@ set -e
 # Fixed Variables #
 GITHUB_BASE_URL="https://raw.githubusercontent.com/Ferks-FK/Pterodactyl-AutoThemes/main"
 SUPPORT_LINK="https://discord.gg/buDBbSGJmQ"
-REQUIRED_NODE_VERSION=22
-SCRIPT_VERSION="v1.12.0-optimized"
+SCRIPT_VERSION="universal-v2.0"
 
 # Update Variables #
 update_variables() {
@@ -114,7 +108,7 @@ check_distro() {
 find_pterodactyl() {
 print "Looking for your pterodactyl installation..."
 
-sleep 2
+sleep 1
 if [ -d "/var/www/pterodactyl" ]; then
     PTERO_INSTALL=true
     PTERO="/var/www/pterodactyl"
@@ -127,98 +121,144 @@ if [ -d "/var/www/pterodactyl" ]; then
   else
     PTERO_INSTALL=false
 fi
-# Update the variables after detection of the pterodactyl installation #
 update_variables
 }
 
-# Verify Compatibility - Strict v1.12.0 check #
+# Determine required Node.js version based on panel version #
+get_required_node_version() {
+    PANEL_MAJOR=$(echo "$PANEL_VERSION" | cut -d. -f1)
+    PANEL_MINOR=$(echo "$PANEL_VERSION" | cut -d. -f2)
+    
+    # v1.12.0+ requires Node.js 22
+    if [ "$PANEL_MAJOR" == "1" ] && [ "$PANEL_MINOR" -ge 12 ]; then
+        REQUIRED_NODE=22
+    # v1.11.x requires Node.js 20
+    elif [ "$PANEL_MAJOR" == "1" ] && [ "$PANEL_MINOR" == 11 ]; then
+        REQUIRED_NODE=20
+    # v1.8.x - v1.10.x can use Node.js 18 or 20
+    elif [ "$PANEL_MAJOR" == "1" ] && [ "$PANEL_MINOR" -ge 8 ]; then
+        REQUIRED_NODE=18
+    else
+        REQUIRED_NODE=18  # fallback
+    fi
+    
+    echo "$REQUIRED_NODE"
+}
+
+# Verify Compatibility - Universal check #
 compatibility() {
-print "Checking compatibility with Pterodactyl v1.12.0..."
+print "Checking panel version compatibility..."
 
 sleep 1
 
 echo -e "${CYAN}========================================${RESET}"
-echo -e "${CYAN}Panel Version Detected: ${YELLOW}$PANEL_VERSION${RESET}"
-echo -e "${CYAN}Required Version: ${GREEN}1.12.0${RESET}"
+echo -e "${CYAN}Panel Version: ${YELLOW}$PANEL_VERSION${RESET}"
 echo -e "${CYAN}========================================${RESET}"
 
-# Strict version check for v1.12.0
-if [ "$PANEL_VERSION" == "1.12.0" ]; then
-    print_success "Perfect! Panel version ${YELLOW}v1.12.0${RESET} detected"
-    print "This script is optimized specifically for this version"
-elif [ "$PANEL_VERSION" == "1.12.1" ] || [ "$PANEL_VERSION" == "1.12.2" ]; then
-    print_warning "Panel version ${YELLOW}$PANEL_VERSION${RESET} detected"
-    echo -e "* This script is optimized for v1.12.0"
-    echo -ne "* Continue anyway? (y/N): "
+# Extract version numbers
+PANEL_MAJOR=$(echo "$PANEL_VERSION" | cut -d. -f1)
+PANEL_MINOR=$(echo "$PANEL_VERSION" | cut -d. -f2)
+
+# Check if version is 1.8.0 or higher
+if [ "$PANEL_MAJOR" == "1" ] && [ "$PANEL_MINOR" -ge 8 ]; then
+    print_success "Compatible version detected: ${YELLOW}v$PANEL_VERSION${RESET}"
+    
+    # Show version-specific info
+    if [ "$PANEL_MINOR" -ge 12 ]; then
+        echo -e "${CYAN}Version Info:${RESET} v1.12.x+ detected"
+        echo -e "${CYAN}Requirements:${RESET} Node.js 22, PHP 8.2+"
+    elif [ "$PANEL_MINOR" == 11 ]; then
+        echo -e "${CYAN}Version Info:${RESET} v1.11.x detected"
+        echo -e "${CYAN}Requirements:${RESET} Node.js 20, PHP 8.1+"
+    else
+        echo -e "${CYAN}Version Info:${RESET} v1.8.x-v1.10.x detected"
+        echo -e "${CYAN}Requirements:${RESET} Node.js 18+, PHP 8.1+"
+    fi
+elif [ "$PANEL_MAJOR" -gt 1 ]; then
+    print_success "Future version detected: ${YELLOW}v$PANEL_VERSION${RESET}"
+    print_warning "This version is newer than tested versions"
+    echo -ne "* Continue installation? (y/N): "
     read -r CONTINUE
     if [[ ! "$CONTINUE" =~ ^[Yy]$ ]]; then
         print "Installation cancelled"
         exit 1
     fi
 else
-    print_error "Incompatible Panel Version: ${RED}$PANEL_VERSION${RESET}"
+    print_error "Incompatible version: ${RED}v$PANEL_VERSION${RESET}"
     echo ""
-    echo -e "${YELLOW}This script is specifically designed for Pterodactyl v1.12.0${RESET}"
+    echo -e "${YELLOW}This script requires Pterodactyl Panel v1.8.0 or higher${RESET}"
     echo -e "Your version: ${RED}$PANEL_VERSION${RESET}"
-    echo -e "Required: ${GREEN}1.12.0${RESET}"
+    echo -e "Required: ${GREEN}v1.8.0+${RESET}"
     echo ""
-    echo -e "${CYAN}Recommendations:${RESET}"
-    if [[ "$PANEL_VERSION" < "1.12.0" ]]; then
-        echo "• Update your panel to v1.12.0 first"
-        echo "• Run: ${YELLOW}cd /var/www/pterodactyl && php artisan p:upgrade${RESET}"
-    else
-        echo "• Your panel is newer than v1.12.0"
-        echo "• Check if theme files need updates for your version"
-    fi
+    echo -e "${CYAN}Please update your panel first:${RESET}"
+    echo -e "cd /var/www/pterodactyl"
+    echo -e "php artisan p:upgrade"
     echo ""
     exit 1
 fi
 
-# Check PHP version (v1.12.0 requires PHP 8.2+)
-PHP_VERSION=$(php -r 'echo PHP_VERSION;' | cut -d'.' -f1-2)
-PHP_MAJOR=$(echo "$PHP_VERSION" | cut -d'.' -f1)
-PHP_MINOR=$(echo "$PHP_VERSION" | cut -d'.' -f2)
+# Check PHP version
+PHP_VERSION=$(php -r 'echo PHP_VERSION;' | cut -d. -f1-2)
+PHP_MAJOR=$(echo "$PHP_VERSION" | cut -d. -f1)
+PHP_MINOR=$(echo "$PHP_VERSION" | cut -d. -f2)
 
 echo ""
-echo -e "${CYAN}PHP Version Check:${RESET}"
-echo -e "Detected: ${YELLOW}PHP $PHP_VERSION${RESET}"
+echo -e "${CYAN}PHP Version:${RESET} ${YELLOW}$PHP_VERSION${RESET}"
 
-if [ "$PHP_MAJOR" -ge 8 ] && [ "$PHP_MINOR" -ge 2 ]; then
-    print_success "PHP version requirement met (8.2+)"
+# PHP version requirements based on panel version
+if [ "$PANEL_MINOR" -ge 12 ]; then
+    # v1.12.0+ requires PHP 8.2+
+    if [ "$PHP_MAJOR" -ge 8 ] && [ "$PHP_MINOR" -ge 2 ]; then
+        print_success "PHP requirement met"
+    else
+        print_error "PHP 8.2+ required for Pterodactyl v1.12.0+"
+        echo -e "Your PHP: ${RED}$PHP_VERSION${RESET}"
+        echo -e "Required: ${GREEN}8.2+${RESET}"
+        exit 1
+    fi
 else
-    print_error "PHP 8.2 or higher required for Pterodactyl v1.12.0"
-    echo -e "Your version: ${RED}PHP $PHP_VERSION${RESET}"
-    echo -e "Required: ${GREEN}PHP 8.2+${RESET}"
-    exit 1
+    # v1.8.x-v1.11.x requires PHP 8.1+
+    if [ "$PHP_MAJOR" -ge 8 ] && [ "$PHP_MINOR" -ge 1 ]; then
+        print_success "PHP requirement met"
+    else
+        print_error "PHP 8.1+ required for Pterodactyl v1.8.0+"
+        echo -e "Your PHP: ${RED}$PHP_VERSION${RESET}"
+        echo -e "Required: ${GREEN}8.1+${RESET}"
+        exit 1
+    fi
 fi
 }
 
-# Install Dependencies - Node.js 22 required for v1.12.0 #
+# Install Dependencies - Auto-detect required Node.js version #
 dependencies() {
-print "Installing/Checking dependencies for v1.12.0..."
+print "Checking dependencies..."
 
+# Get required Node.js version for this panel version
+REQUIRED_NODE=$(get_required_node_version)
+
+echo ""
 echo -e "${CYAN}========================================${RESET}"
-echo -e "${CYAN}Checking Node.js (Required: v22)${RESET}"
+echo -e "${CYAN}Node.js Requirement Check${RESET}"
+echo -e "${CYAN}Panel v$PANEL_VERSION requires: Node.js ${YELLOW}v$REQUIRED_NODE${RESET}"
 echo -e "${CYAN}========================================${RESET}"
 
-# Check Node.js version
+# Check current Node.js version
 if command -v node &>/dev/null; then
-    NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-    echo -e "Current Node.js version: ${YELLOW}v$NODE_VERSION${RESET}"
+    CURRENT_NODE=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+    echo -e "Current Node.js: ${YELLOW}v$CURRENT_NODE${RESET}"
     
-    if [ "$NODE_VERSION" -eq "$REQUIRED_NODE_VERSION" ]; then
-        print_success "Node.js ${REQUIRED_NODE_VERSION} detected - Perfect!"
-    elif [ "$NODE_VERSION" -gt "$REQUIRED_NODE_VERSION" ]; then
-        print_warning "Node.js v$NODE_VERSION detected (newer than required v${REQUIRED_NODE_VERSION})"
-        echo -e "* Should work fine, but v${REQUIRED_NODE_VERSION} is recommended for v1.12.0"
+    if [ "$CURRENT_NODE" -eq "$REQUIRED_NODE" ]; then
+        print_success "Perfect! Node.js v$REQUIRED_NODE is installed"
+    elif [ "$CURRENT_NODE" -gt "$REQUIRED_NODE" ]; then
+        print_success "Node.js v$CURRENT_NODE detected (newer than required v$REQUIRED_NODE)"
     else
-        print_warning "Node.js v$NODE_VERSION is too old for Pterodactyl v1.12.0"
-        print "Installing Node.js ${REQUIRED_NODE_VERSION}..."
-        install_nodejs
+        print_warning "Node.js v$CURRENT_NODE is too old"
+        print "Upgrading to Node.js v$REQUIRED_NODE..."
+        install_nodejs "$REQUIRED_NODE"
     fi
 else
-    print "Node.js not found, installing Node.js ${REQUIRED_NODE_VERSION}..."
-    install_nodejs
+    print "Node.js not found, installing v$REQUIRED_NODE..."
+    install_nodejs "$REQUIRED_NODE"
 fi
 
 # Check Yarn
@@ -230,29 +270,29 @@ if command -v yarn &>/dev/null; then
 else
     print "Installing Yarn..."
     npm install -g yarn
-    print_success "Yarn installed successfully"
+    print_success "Yarn installed"
 fi
 }
 
 install_nodejs() {
-    # Remove old Node.js versions first
-    print "Removing old Node.js installations..."
+    local NODE_VERSION=$1
     
+    print "Installing Node.js v$NODE_VERSION..."
+    
+    # Remove old versions
     case "$OS" in
       debian | ubuntu)
         apt-get remove -y nodejs npm 2>/dev/null || true
         apt-get autoremove -y 2>/dev/null || true
         
-        print "Installing Node.js ${REQUIRED_NODE_VERSION}..."
-        curl -fsSL https://deb.nodesource.com/setup_${REQUIRED_NODE_VERSION}.x | bash -
+        curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
         apt-get install -y nodejs
       ;;
       centos | rhel | rocky | almalinux)
         yum remove -y nodejs npm 2>/dev/null || true
         dnf remove -y nodejs npm 2>/dev/null || true
         
-        print "Installing Node.js ${REQUIRED_NODE_VERSION}..."
-        curl -fsSL https://rpm.nodesource.com/setup_${REQUIRED_NODE_VERSION}.x | bash -
+        curl -fsSL https://rpm.nodesource.com/setup_${NODE_VERSION}.x | bash -
         
         if [ "$OS_VER_MAJOR" == "7" ]; then
             yum install -y nodejs
@@ -262,23 +302,20 @@ install_nodejs() {
       ;;
       fedora)
         dnf remove -y nodejs npm 2>/dev/null || true
-        
-        print "Installing Node.js ${REQUIRED_NODE_VERSION}..."
-        curl -fsSL https://rpm.nodesource.com/setup_${REQUIRED_NODE_VERSION}.x | bash -
+        curl -fsSL https://rpm.nodesource.com/setup_${NODE_VERSION}.x | bash -
         dnf install -y nodejs
       ;;
       *)
-        print_error "Unsupported OS for automatic Node.js installation"
-        print "Please install Node.js ${REQUIRED_NODE_VERSION} manually:"
-        echo "https://nodejs.org/en/download/"
+        print_error "Unsupported OS for auto Node.js installation"
+        print "Please install Node.js v$NODE_VERSION manually"
         exit 1
       ;;
     esac
     
-    # Verify installation
+    # Verify
     if command -v node &>/dev/null; then
-        NODE_VERSION=$(node -v)
-        print_success "Node.js ${NODE_VERSION} installed successfully"
+        NODE_VER=$(node -v)
+        print_success "Node.js $NODE_VER installed successfully"
     else
         print_error "Node.js installation failed"
         exit 1
@@ -287,18 +324,15 @@ install_nodejs() {
 
 # Panel Backup #
 backup() {
-print "Creating backup before installation..."
+print "Creating backup..."
 
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-BACKUP_DIR="$PTERO/PanelBackup[AnimatedGraphics-v1.12.0-$TIMESTAMP]"
-
-echo -e "${CYAN}Backup location: ${YELLOW}$BACKUP_DIR${RESET}"
+BACKUP_DIR="$PTERO/PanelBackup[AnimatedGraphics-$TIMESTAMP]"
 
 cd "$PTERO" || exit 1
-
 mkdir -p "$BACKUP_DIR"
 
-print "Creating compressed backup (this may take a moment)..."
+print "Compressing files (excluding node_modules)..."
 
 if [ -d "$PTERO/node_modules" ]; then
     tar -czf "$BACKUP_DIR/panel-backup.tar.gz" \
@@ -319,49 +353,38 @@ else
         -- * .env 2>/dev/null
 fi
 
-# Save version info
-echo "Panel Version: $PANEL_VERSION" > "$BACKUP_DIR/backup-info.txt"
-echo "Backup Date: $(date)" >> "$BACKUP_DIR/backup-info.txt"
-echo "Node.js Version: $(node -v)" >> "$BACKUP_DIR/backup-info.txt"
-echo "PHP Version: $(php -v | head -n1)" >> "$BACKUP_DIR/backup-info.txt"
+# Save info
+echo "Panel Version: $PANEL_VERSION" > "$BACKUP_DIR/info.txt"
+echo "Backup Date: $(date)" >> "$BACKUP_DIR/info.txt"
+echo "Node.js: $(node -v)" >> "$BACKUP_DIR/info.txt"
+echo "PHP: $(php -v | head -n1)" >> "$BACKUP_DIR/info.txt"
 
-print_success "Backup created successfully!"
-echo -e "Location: ${YELLOW}$BACKUP_DIR${RESET}"
+print_success "Backup created at: ${YELLOW}$BACKUP_DIR${RESET}"
 }
 
 # Download Theme Files #
 download_files() {
-print "Downloading AnimatedGraphics theme files..."
+print "Downloading theme files..."
 
 mkdir -p "$PTERO/temp"
 
-# Try to download from original repo
-print "Attempting download from GitHub..."
-
 if curl -sSLf -o "$PTERO/temp/AnimatedGraphics.tar.gz" \
     "$GITHUB_BASE_URL/themes/version1.x/AnimatedGraphics/AnimatedGraphics.tar.gz" 2>/dev/null; then
-    print_success "Theme files downloaded successfully"
+    print_success "Download successful"
     
-    print "Extracting theme files..."
     tar -xzf "$PTERO/temp/AnimatedGraphics.tar.gz" -C "$PTERO/temp"
     
     if [ -d "$PTERO/temp/AnimatedGraphics" ]; then
-        print "Copying theme files to panel directory..."
         cp -rf "$PTERO/temp/AnimatedGraphics/"* "$PTERO/"
         print_success "Theme files installed"
     else
-        print_error "Failed to extract theme files"
+        print_error "Extraction failed"
         rm -rf "$PTERO/temp"
         exit 1
     fi
 else
-    print_error "Failed to download theme files from GitHub"
-    print_warning "This could be because:"
-    echo "  • GitHub is temporarily unavailable"
-    echo "  • The theme repository structure has changed"
-    echo "  • Network connectivity issues"
-    echo ""
-    echo "Please check: $(hyperlink "$GITHUB_BASE_URL")"
+    print_error "Download failed"
+    echo -e "Check: ${YELLOW}$(hyperlink "$GITHUB_BASE_URL")${RESET}"
     rm -rf "$PTERO/temp"
     exit 1
 fi
@@ -369,190 +392,134 @@ fi
 rm -rf "$PTERO/temp"
 }
 
-# Check for conflicting addons #
+# Check conflicts #
 check_conflict() {
-print "Checking for conflicting themes/addons..."
+print "Checking for conflicts..."
 
 sleep 1
 
-# Check common conflict files
 CONFLICT_FOUND=false
-
 CONFLICT_FILES=(
     "$PTERO/resources/scripts/components/server/StatGraphs.tsx"
     "$PTERO/resources/scripts/components/server/Console.tsx"
-    "$PTERO/resources/scripts/components/dashboard/DashboardContainer.tsx"
 )
 
 for file in "${CONFLICT_FILES[@]}"; do
-    if [ -f "$file" ]; then
-        if grep -q "Installed by Auto-Addons\|BIGGER_CONSOLE\|BiggerConsole\|Custom-Theme" "$file" 2>/dev/null; then
-            CONFLICT_FOUND=true
-            print_warning "Potential conflict detected in: $(basename "$file")"
-        fi
+    if [ -f "$file" ] && grep -q "Installed by Auto-Addons\|BIGGER_CONSOLE\|BiggerConsole" "$file" 2>/dev/null; then
+        CONFLICT_FOUND=true
+        print_warning "Conflict in: $(basename "$file")"
     fi
 done
 
 if [ "$CONFLICT_FOUND" = true ]; then
     echo ""
-    echo -e "${YELLOW}⚠ Conflicts detected with other themes/addons${RESET}"
-    echo ""
-    echo -e "${CYAN}Recommended actions:${RESET}"
-    echo "1. Backup and remove conflicting themes first"
-    echo "2. Or continue and manually resolve conflicts later"
-    echo ""
-    echo -ne "* Continue installation anyway? (y/N): "
+    echo -ne "* Continue anyway? (y/N): "
     read -r CONTINUE
     if [[ ! "$CONTINUE" =~ ^[Yy]$ ]]; then
-        print "Installation cancelled by user"
+        print "Cancelled"
         exit 1
     fi
 else
-    print_success "No conflicts detected"
+    print_success "No conflicts"
 fi
 }
 
-# Panel Production Build #
+# Production Build #
 production() {
 print_brake 70
-echo -e "${CYAN}Building Panel Assets (Optimized for v1.12.0)${RESET}"
+echo -e "${CYAN}Building Panel Assets${RESET}"
 print_brake 70
-
 echo ""
-print_warning "This process will take 5-15 minutes depending on your server"
-print_warning "DO NOT cancel or close this terminal!"
+print_warning "This takes 5-15 minutes - DO NOT cancel!"
 echo ""
 
 cd "$PTERO" || exit 1
 
-# Clear old cache
-print "Clearing Laravel cache..."
+# Clear cache
+print "Clearing cache..."
 php artisan config:clear 2>/dev/null || true
 php artisan view:clear 2>/dev/null || true
 php artisan route:clear 2>/dev/null || true
 
-# Check if node_modules exists
+# Install/update dependencies
 if [ ! -d "$PTERO/node_modules" ]; then
-    print "Installing Node.js dependencies with Yarn..."
-    echo -e "${YELLOW}This is the first time building, it will take longer...${RESET}"
+    print "Installing dependencies (first time - will be slow)..."
     yarn install --frozen-lockfile
 else
-    print "Updating Node.js dependencies..."
+    print "Updating dependencies..."
     yarn install --frozen-lockfile
 fi
 
-# Build production assets
-print "Building production assets for v1.12.0..."
-echo -e "${CYAN}Progress will be shown below:${RESET}"
-echo ""
-
+# Build
+print "Building production assets..."
 yarn build:production
 
-echo ""
-print_success "Build completed successfully!"
-
-# Set correct permissions
-print "Setting correct permissions..."
+# Permissions
+print "Setting permissions..."
 chown -R www-data:www-data "$PTERO"/* 2>/dev/null || true
 
-# Clear cache again after build
-print "Clearing cache after build..."
+# Clear again
+print "Final cache clear..."
 php artisan config:clear
 php artisan view:clear
 php artisan queue:restart 2>/dev/null || true
 
-print_success "Production build completed!"
+print_success "Build complete!"
 }
 
-# Verification #
+# Verify #
 verify_installation() {
-print "Verifying installation..."
+print "Verifying..."
 
-VERIFICATION_PASSED=true
-
-# Check if manifest exists
 if [ -f "$PTERO/public/assets/manifest.json" ]; then
-    print_success "Asset manifest found"
+    print_success "Asset manifest OK"
 else
-    print_warning "Asset manifest not found"
-    VERIFICATION_PASSED=false
+    print_warning "Asset manifest missing"
 fi
 
-# Check if public assets exist
 if [ -d "$PTERO/public/assets" ] && [ "$(ls -A "$PTERO/public/assets")" ]; then
-    print_success "Public assets generated"
+    print_success "Public assets OK"
 else
-    print_warning "Public assets directory empty"
-    VERIFICATION_PASSED=false
-fi
-
-# Check permissions
-if [ -w "$PTERO/storage" ]; then
-    print_success "Storage directory writable"
-else
-    print_warning "Storage directory not writable"
-    VERIFICATION_PASSED=false
-fi
-
-echo ""
-if [ "$VERIFICATION_PASSED" = true ]; then
-    print_success "All verification checks passed!"
-else
-    print_warning "Some verification checks failed"
-    echo -e "* Check ${YELLOW}$PTERO/storage/logs/${RESET} for errors"
+    print_warning "Public assets missing"
 fi
 }
 
-# Success message #
+# Success #
 bye() {
 clear
 print_brake 70
 echo ""
-echo -e "${GREEN}╔═══════════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${GREEN}║                                                               ║${RESET}"
-echo -e "${GREEN}║      ${YELLOW}✓${GREEN} AnimatedGraphics Theme Successfully Installed!      ║${RESET}"
-echo -e "${GREEN}║                                                               ║${RESET}"
-echo -e "${GREEN}╚═══════════════════════════════════════════════════════════════╝${RESET}"
+echo -e "${GREEN}╔════════════════════════════════════════════════════╗${RESET}"
+echo -e "${GREEN}║                                                    ║${RESET}"
+echo -e "${GREEN}║  ${YELLOW}✓${GREEN} AnimatedGraphics Theme Installed Successfully! ║${RESET}"
+echo -e "${GREEN}║                                                    ║${RESET}"
+echo -e "${GREEN}╚════════════════════════════════════════════════════╝${RESET}"
 echo ""
 print_brake 70
 echo ""
 echo -e "${CYAN}Installation Summary:${RESET}"
-echo -e "  • Panel Version: ${YELLOW}$PANEL_VERSION${RESET}"
-echo -e "  • Node.js Version: ${YELLOW}$(node -v)${RESET}"
-echo -e "  • Theme: ${YELLOW}AnimatedGraphics${RESET}"
-echo -e "  • Backup: ${YELLOW}PanelBackup[AnimatedGraphics-v1.12.0-*]${RESET}"
+echo -e "  Panel: ${YELLOW}v$PANEL_VERSION${RESET}"
+echo -e "  Node.js: ${YELLOW}$(node -v)${RESET}"
+echo -e "  PHP: ${YELLOW}$(php -v | head -n1 | cut -d' ' -f2)${RESET}"
 echo ""
 print_brake 70
 echo ""
 echo -e "${GREEN}Next Steps:${RESET}"
-echo -e "  ${YELLOW}1.${RESET} Clear your browser cache (Ctrl+F5 or Cmd+Shift+R)"
-echo -e "  ${YELLOW}2.${RESET} Refresh your Pterodactyl panel page"
-echo -e "  ${YELLOW}3.${RESET} Check if animated graphics are working"
-echo -e "  ${YELLOW}4.${RESET} Test server statistics display"
+echo -e "  1. Clear browser cache (Ctrl+Shift+R)"
+echo -e "  2. Refresh panel page"
+echo -e "  3. Enjoy animated graphics!"
 echo ""
-print_brake 70
+echo -e "${CYAN}Troubleshooting:${RESET}"
+echo -e "  cd $PTERO"
+echo -e "  php artisan view:clear"
+echo -e "  php artisan config:clear"
 echo ""
-echo -e "${CYAN}Troubleshooting (if theme not showing):${RESET}"
-echo -e "  ${YELLOW}→${RESET} cd $PTERO"
-echo -e "  ${YELLOW}→${RESET} php artisan view:clear"
-echo -e "  ${YELLOW}→${RESET} php artisan config:clear"
-echo -e "  ${YELLOW}→${RESET} Hard refresh browser (Ctrl+Shift+R)"
-echo ""
-print_brake 70
-echo ""
-echo -e "${CYAN}Need Help?${RESET}"
-echo -e "  • Support: ${YELLOW}$(hyperlink "$SUPPORT_LINK")${RESET}"
-echo -e "  • Logs: ${YELLOW}$PTERO/storage/logs/${RESET}"
-echo -e "  • Original Theme: ${YELLOW}Ferks-FK${RESET}"
-echo ""
-print_brake 70
-echo ""
-echo -e "${GREEN}Thank you for using this installer!${RESET}"
+echo -e "${CYAN}Support:${RESET} ${YELLOW}$(hyperlink "$SUPPORT_LINK")${RESET}"
 echo ""
 print_brake 70
 }
 
-# Main installation function #
+# Main #
 main_install() {
     compatibility
     check_conflict
@@ -564,36 +531,34 @@ main_install() {
     bye
 }
 
-# Exec Script #
+# Start #
 clear
 print_brake 70
-echo -e "${CYAN}╔═══════════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${CYAN}║                                                               ║${RESET}"
-echo -e "${CYAN}║       ${YELLOW}Pterodactyl AnimatedGraphics Theme Installer${CYAN}        ║${RESET}"
-echo -e "${CYAN}║              ${GREEN}Optimized for v1.12.0${CYAN}                         ║${RESET}"
-echo -e "${CYAN}║                                                               ║${RESET}"
-echo -e "${CYAN}╚═══════════════════════════════════════════════════════════════╝${RESET}"
+echo -e "${CYAN}╔════════════════════════════════════════════════════╗${RESET}"
+echo -e "${CYAN}║                                                    ║${RESET}"
+echo -e "${CYAN}║    ${YELLOW}Pterodactyl AnimatedGraphics Installer${CYAN}        ║${RESET}"
+echo -e "${CYAN}║         ${GREEN}Universal Version (v1.8.x - Latest)${CYAN}        ║${RESET}"
+echo -e "${CYAN}║                                                    ║${RESET}"
+echo -e "${CYAN}╚════════════════════════════════════════════════════╝${RESET}"
 print_brake 70
 echo ""
-echo -e "${YELLOW}Script Version: $SCRIPT_VERSION${RESET}"
 echo -e "${YELLOW}Original Theme: Ferks-FK${RESET}"
+echo -e "${YELLOW}Script Version: $SCRIPT_VERSION${RESET}"
 echo ""
 print_brake 70
 
-# Check if running as root
+# Root check
 if [[ $EUID -ne 0 ]]; then
-   print_error "This script must be run as root"
-   echo -e "* Please run with: ${YELLOW}sudo bash $(basename "$0")${RESET}"
+   print_error "Run as root!"
+   echo -e "Use: ${YELLOW}sudo bash $0${RESET}"
    exit 1
 fi
 
-# Show requirements
 echo ""
-echo -e "${CYAN}Requirements for Pterodactyl v1.12.0:${RESET}"
-echo -e "  ✓ Panel Version: ${GREEN}v1.12.0${RESET}"
-echo -e "  ✓ PHP Version: ${GREEN}8.2+${RESET}"
-echo -e "  ✓ Node.js Version: ${GREEN}22${RESET}"
-echo -e "  ✓ Composer: ${GREEN}2.x${RESET}"
+echo -e "${CYAN}Supports:${RESET}"
+echo -e "  • Pterodactyl v1.8.x - Latest"
+echo -e "  • Auto Node.js version detection"
+echo -e "  • All modern PHP versions"
 echo ""
 print_brake 70
 
@@ -603,36 +568,32 @@ check_distro
 find_pterodactyl
 
 if [ "$PTERO_INSTALL" == true ]; then
-    print_success "Panel installation found at: ${YELLOW}$PTERO${RESET}"
+    print_success "Panel found: ${YELLOW}$PTERO${RESET}"
     echo ""
-    echo -ne "${CYAN}Press Enter to start installation or Ctrl+C to cancel...${RESET}"
+    echo -ne "${CYAN}Press Enter to continue or Ctrl+C to cancel...${RESET}"
     read -r
     main_install
-elif [ "$PTERO_INSTALL" == false ]; then
-    print_warning "Panel installation not found in standard directories"
+else
+    print_warning "Panel not found in standard locations"
     echo ""
-    echo -e "${CYAN}Standard locations checked:${RESET}"
-    echo -e "  • /var/www/pterodactyl"
-    echo -e "  • /var/www/panel"
-    echo -e "  • /var/www/ptero"
+    echo -e "${CYAN}Checked:${RESET}"
+    echo "  • /var/www/pterodactyl"
+    echo "  • /var/www/panel"
+    echo "  • /var/www/ptero"
     echo ""
-    echo -e "${GREEN}Example custom path:${RESET} ${YELLOW}/var/www/mypanel${RESET}"
-    echo ""
-    echo -ne "* Enter the pterodactyl installation directory: "
+    echo -ne "* Enter panel directory: "
     read -r MANUAL_DIR
     
     if [ -d "$MANUAL_DIR" ]; then
-        print_success "Directory found: ${YELLOW}$MANUAL_DIR${RESET}"
+        print_success "Found: ${YELLOW}$MANUAL_DIR${RESET}"
         PTERO="$MANUAL_DIR"
         update_variables
         echo ""
-        echo -ne "${CYAN}Press Enter to start installation or Ctrl+C to cancel...${RESET}"
+        echo -ne "${CYAN}Press Enter to continue...${RESET}"
         read -r
         main_install
     else
-        print_error "Directory not found: $MANUAL_DIR"
-        echo ""
-        echo "Please check the path and try again"
+        print_error "Not found: $MANUAL_DIR"
         exit 1
     fi
 fi
