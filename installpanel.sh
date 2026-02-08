@@ -196,7 +196,7 @@ install_wings() {
     print_info "Menjalankan official pterodactyl-installer..."
     echo ""
     
-    # Buat file untuk auto-input
+    # Buat file untuk auto-input installer wings
     cat > /tmp/wings_input.txt <<EOF
 1
 y
@@ -213,6 +213,12 @@ EOF
     
     # Hapus file input
     rm -f /tmp/wings_input.txt
+    
+    # Cek apakah direktori pterodactyl sudah dibuat oleh installer
+    if [ ! -d "/etc/pterodactyl" ]; then
+        print_warning "Direktori /etc/pterodactyl belum ada, membuat..."
+        mkdir -p /etc/pterodactyl
+    fi
     
     # Setelah instalasi selesai
     clear
@@ -247,7 +253,7 @@ EOF
         print_error "Command tidak boleh kosong!"
         echo ""
         echo "Jalankan manual dengan command dari panel, lalu:"
-        echo "  systemctl enable --now wings"
+        echo "  systemctl start wings"
         echo ""
         echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
         read
@@ -258,20 +264,67 @@ EOF
     # Jalankan command wings configure
     print_info "Menjalankan wings configure..."
     
-    # Pastikan di direktori yang benar
-    cd /etc/pterodactyl
+    # Extract komponen dari command
+    # Command format: cd /etc/pterodactyl && sudo wings configure --panel-url URL --token TOKEN --node ID
+    if [[ "$WINGS_COMMAND" =~ --panel-url[[:space:]]+([^[:space:]]+) ]]; then
+        PANEL_URL="${BASH_REMATCH[1]}"
+    fi
     
-    # Jalankan command (hapus sudo jika ada, karena script sudah root)
-    WINGS_COMMAND_CLEAN=$(echo "$WINGS_COMMAND" | sed 's/cd \/etc\/pterodactyl && sudo //g' | sed 's/cd \/etc\/pterodactyl && //g' | sed 's/sudo //g')
+    if [[ "$WINGS_COMMAND" =~ --token[[:space:]]+([^[:space:]]+) ]]; then
+        TOKEN="${BASH_REMATCH[1]}"
+    fi
     
-    eval "$WINGS_COMMAND_CLEAN"
+    if [[ "$WINGS_COMMAND" =~ --node[[:space:]]+([^[:space:]]+) ]]; then
+        NODE_ID="${BASH_REMATCH[1]}"
+    fi
     
-    if [ $? -eq 0 ]; then
+    # Validasi parameter
+    if [[ -z "$PANEL_URL" ]] || [[ -z "$TOKEN" ]] || [[ -z "$NODE_ID" ]]; then
+        print_error "Command tidak valid! Pastikan format benar."
+        echo ""
+        echo "Format yang benar:"
+        echo "cd /etc/pterodactyl && sudo wings configure --panel-url https://panel.com --token ptla_xxx --node 1"
+        echo ""
+        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
+        read
+        main_menu
+        return
+    fi
+    
+    # Pindah ke direktori pterodactyl dan jalankan wings configure
+    cd /etc/pterodactyl || {
+        print_error "Direktori /etc/pterodactyl tidak ada!"
+        echo ""
+        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
+        read
+        main_menu
+        return
+    }
+    
+    # Jalankan wings configure dengan parameter yang di-extract
+    wings configure --panel-url "$PANEL_URL" --token "$TOKEN" --node "$NODE_ID"
+    
+    CONFIGURE_STATUS=$?
+    
+    if [ $CONFIGURE_STATUS -eq 0 ]; then
         print_success "Konfigurasi Wings berhasil!"
+        
+        # Cek apakah config.yml sudah dibuat
+        if [ -f "/etc/pterodactyl/config.yml" ]; then
+            print_success "File config.yml berhasil dibuat!"
+        else
+            print_error "File config.yml tidak ditemukan!"
+            echo ""
+            echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
+            read
+            main_menu
+            return
+        fi
     else
         print_error "Konfigurasi Wings gagal!"
         echo ""
         echo "Coba jalankan manual:"
+        echo "  cd /etc/pterodactyl"
         echo "  $WINGS_COMMAND"
         echo ""
         echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
@@ -281,11 +334,14 @@ EOF
     fi
     
     # Start Wings
-    print_info "Starting Wings..."
-    systemctl enable --now wings
+    print_info "Starting Wings dengan systemctl..."
+    systemctl start wings
     
     # Tunggu beberapa detik
     sleep 3
+    
+    # Enable wings agar auto start saat boot
+    systemctl enable wings 2>/dev/null
     
     # Cek status Wings
     if systemctl is-active --quiet wings; then
@@ -293,6 +349,8 @@ EOF
     else
         print_error "Wings gagal dijalankan!"
         print_warning "Cek log dengan: journalctl -u wings -f"
+        echo ""
+        echo "Atau coba start manual dengan: systemctl start wings"
         echo ""
         echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
         read
