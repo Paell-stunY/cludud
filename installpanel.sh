@@ -45,7 +45,7 @@ show_banner() {
     echo -e "${NC}"
     echo -e "${MAGENTA}╔══════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${MAGENTA}║${NC}          ${YELLOW}PTERODACTYL AUTO INSTALLER${NC}                          ${MAGENTA}║${NC}"
-    echo -e "${MAGENTA}║${NC}          ${GREEN}Copyright © Rielliona${NC}                                 ${MAGENTA}║${NC}"
+    echo -e "${MAGENTA}║${NC}          ${GREEN}Copyright © Riellionas${NC}                                 ${MAGENTA}║${NC}"
     echo -e "${MAGENTA}╚══════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 }
@@ -301,8 +301,19 @@ EOF
         return
     }
     
-    # Jalankan wings configure dengan parameter yang di-extract
-    wings configure --panel-url "$PANEL_URL" --token "$TOKEN" --node "$NODE_ID"
+    # Cek apakah wings binary ada
+    if [ ! -f "/usr/local/bin/wings" ]; then
+        print_error "Wings binary tidak ditemukan di /usr/local/bin/wings"
+        print_warning "Installer mungkin gagal. Coba install ulang Wings."
+        echo ""
+        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
+        read
+        main_menu
+        return
+    fi
+    
+    # Jalankan wings configure dengan parameter yang di-extract (gunakan full path)
+    /usr/local/bin/wings configure --panel-url "$PANEL_URL" --token "$TOKEN" --node "$NODE_ID"
     
     CONFIGURE_STATUS=$?
     
@@ -325,7 +336,7 @@ EOF
         echo ""
         echo "Coba jalankan manual:"
         echo "  cd /etc/pterodactyl"
-        echo "  $WINGS_COMMAND"
+        echo "  /usr/local/bin/wings configure --panel-url $PANEL_URL --token $TOKEN --node $NODE_ID"
         echo ""
         echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
         read
