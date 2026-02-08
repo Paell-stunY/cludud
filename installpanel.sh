@@ -45,7 +45,7 @@ show_banner() {
     echo -e "${NC}"
     echo -e "${MAGENTA}╔══════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${MAGENTA}║${NC}          ${YELLOW}PTERODACTYL AUTO INSTALLER${NC}                          ${MAGENTA}║${NC}"
-    echo -e "${MAGENTA}║${NC}          ${GREEN}Copyright © Riellionasa${NC}                                 ${MAGENTA}║${NC}"
+    echo -e "${MAGENTA}║${NC}          ${GREEN}Copyright © Rielliona${NC}                                 ${MAGENTA}║${NC}"
     echo -e "${MAGENTA}╚══════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 }
@@ -302,7 +302,7 @@ EOF
     }
     
     # Cek apakah wings binary ada
-    if [ ! -f "/usr/local/bin/wings" ]; then
+    if [ ! -f "/etc/pterodactyl" ]; then
         print_error "Wings binary tidak ditemukan di /usr/local/bin/wings"
         print_warning "Installer mungkin gagal. Coba install ulang Wings."
         echo ""
@@ -313,7 +313,7 @@ EOF
     fi
     
     # Jalankan wings configure dengan parameter yang di-extract (gunakan full path)
-    /usr/local/bin/wings configure --panel-url "$PANEL_URL" --token "$TOKEN" --node "$NODE_ID"
+    sudo wings configure --panel-url "$PANEL_URL" --token "$TOKEN" --node "$NODE_ID"
     
     CONFIGURE_STATUS=$?
     
@@ -350,9 +350,6 @@ EOF
     
     # Tunggu beberapa detik
     sleep 3
-    
-    # Enable wings agar auto start saat boot
-    systemctl enable wings 2>/dev/null
     
     # Cek status Wings
     if systemctl is-active --quiet wings; then
