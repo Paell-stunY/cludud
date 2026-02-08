@@ -45,7 +45,7 @@ show_banner() {
     echo -e "${NC}"
     echo -e "${MAGENTA}╔══════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${MAGENTA}║${NC}          ${YELLOW}PTERODACTYL AUTO INSTALLER${NC}                          ${MAGENTA}║${NC}"
-    echo -e "${MAGENTA}║${NC}          ${GREEN}Copyright © Riellionas${NC}                                 ${MAGENTA}║${NC}"
+    echo -e "${MAGENTA}║${NC}          ${GREEN}Copyright © Riellionasa${NC}                                 ${MAGENTA}║${NC}"
     echo -e "${MAGENTA}╚══════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 }
