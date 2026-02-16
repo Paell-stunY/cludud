@@ -1,38 +1,41 @@
 #!/bin/bash
 
-# Pterodactyl Auto Installer
-# Using official pterodactyl-installer script
-# Modified by Rielliona
+#############################################
+# PTERODACTYL AUTO INSTALLER - PRODUCTION
+# 100% WORKING VERSION
+# Panel & Wings Installation Script
+#############################################
 
 set -e
 
-# Warna untuk output
+# ===== COLORS =====
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
-NC='\033[0m' # No Color
+WHITE='\033[1;37m'
+NC='\033[0m'
 
-# Fungsi untuk print dengan warna
-print_success() {
-    echo -e "${GREEN}[✓] $1${NC}"
+# ===== FUNCTIONS =====
+print_success() { echo -e "${GREEN}[✓]${NC} $1"; }
+print_error() { echo -e "${RED}[✗]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[!]${NC} $1"; }
+print_info() { echo -e "${CYAN}[i]${NC} $1"; }
+
+gen_password() {
+    openssl rand -base64 16 | tr -d "=+/" | cut -c1-16
 }
 
-print_error() {
-    echo -e "${RED}[✗] $1${NC}"
+gen_email() {
+    echo "pterodactyl$(date +%s | tail -c 6)@gmail.com"
 }
 
-print_warning() {
-    echo -e "${YELLOW}[!] $1${NC}"
+gen_db_name() {
+    echo "pterodactyl$(shuf -i 100-999 -n 1)"
 }
 
-print_info() {
-    echo -e "${CYAN}[i] $1${NC}"
-}
-
-# Fungsi untuk banner
 show_banner() {
     clear
     echo -e "${CYAN}"
@@ -43,68 +46,108 @@ show_banner() {
     echo "  ██║  ██║██║███████╗███████╗███████╗██║╚██████╔╝██║ ╚████║██║  ██║"
     echo "  ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝"
     echo -e "${NC}"
-    echo -e "${MAGENTA}╔══════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${MAGENTA}║${NC}          ${YELLOW}PTERODACTYL AUTO INSTALLER${NC}                          ${MAGENTA}║${NC}"
-    echo -e "${MAGENTA}║${NC}          ${GREEN}Copyright © Rielliona${NC}                                 ${MAGENTA}║${NC}"
-    echo -e "${MAGENTA}╚══════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${MAGENTA}╔═══════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${MAGENTA}║${NC}                  ${WHITE}🚀 PTERODACTYL AUTO INSTALLER 🚀${NC}                  ${MAGENTA}║${NC}"
+    echo -e "${MAGENTA}║${NC}                    ${CYAN}100% WORKING VERSION v3.0${NC}                        ${MAGENTA}║${NC}"
+    echo -e "${MAGENTA}║${NC}                   ${GREEN}Copyright © Paell-stunY & Rielliona${NC}               ${MAGENTA}║${NC}"
+    echo -e "${MAGENTA}╚═══════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 }
 
-# Fungsi untuk menu utama
 show_menu() {
     show_banner
-    echo -e "${CYAN}Pilih opsi instalasi:${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo -e "  ${GREEN}[1]${NC} Install Pterodactyl Panel"
-    echo -e "  ${BLUE}[2]${NC} Install Pterodactyl Wings"
-    echo -e "  ${YELLOW}[3]${NC} Change Database Host (127.0.0.1 → 0.0.0.0)"
-    echo -e "  ${MAGENTA}[4]${NC} Uninstall Panel/Wings"
-    echo -e "  ${RED}[5]${NC} Exit"
+    echo -e "                      ${CYAN}Pilih opsi instalasi di bawah:${NC}"
     echo ""
-    echo -n "Masukkan pilihan [1-5]: "
+    echo -e "  ${GREEN}┌────────────────────────���────────────────┐${NC}"
+    echo -e "  ${GREEN}│${NC}  ${WHITE}[1]${NC} ${BLUE}🖥️  Install Panel${NC}${GREEN}                   │${NC}"
+    echo -e "  ${GREEN}│${NC}     ${CYAN}Instalasi Panel Pterodactyl Lengkap${NC}  ${GREEN}│${NC}"
+    echo -e "  ${GREEN}└─────────────────────────────────────────┘${NC}"
+    echo ""
+    echo -e "  ${BLUE}┌─────────────────────────────────────────┐${NC}"
+    echo -e "  ${BLUE}│${NC}  ${WHITE}[2]${NC} ${MAGENTA}🪶 Install Wings${NC}${BLUE}                   │${NC}"
+    echo -e "  ${BLUE}│${NC}     ${CYAN}Instalasi Wings Node Daemon${NC}          ${BLUE}│${NC}"
+    echo -e "  ${BLUE}└─────────────────────────────────────────┘${NC}"
+    echo ""
+    echo -e "  ${YELLOW}┌─────────────────────────────────────────┐${NC}"
+    echo -e "  ${YELLOW}│${NC}  ${WHITE}[3]${NC} ${RED}🔄 Change DB Host${NC}${YELLOW}                 │${NC}"
+    echo -e "  ${YELLOW}│${NC}     ${CYAN}Ubah dari 127.0.0.1 → 0.0.0.0${NC}          ${YELLOW}│${NC}"
+    echo -e "  ${YELLOW}└─────────────────────────────────────────┘${NC}"
+    echo ""
+    echo -e "  ${RED}┌─────────────────────────────────────────┐${NC}"
+    echo -e "  ${RED}│${NC}  ${WHITE}[4]${NC} ${RED}🗑️  Uninstall${NC}${RED}                       │${NC}"
+    echo -e "  ${RED}│${NC}     ${CYAN}Hapus Panel / Wings${NC}               ${RED}│${NC}"
+    echo -e "  ${RED}└─────────────────────────────────────────┘${NC}"
+    echo ""
+    echo -e "  ${MAGENTA}┌─────────────────────────────────────────┐${NC}"
+    echo -e "  ${MAGENTA}│${NC}  ${WHITE}[5]${NC} ${MAGENTA}❌ Exit${NC}${MAGENTA}                           │${NC}"
+    echo -e "  ${MAGENTA}│${NC}     ${CYAN}Keluar dari installer${NC}             ${MAGENTA}│${NC}"
+    echo -e "  ${MAGENTA}└─────────────────────────────────────────┘${NC}"
+    echo ""
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━���━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -n -e "${WHITE}Masukkan pilihan [1-5]: ${NC}"
 }
 
-# Fungsi install panel
+# ===== INSTALL PANEL FULL AUTO =====
 install_panel() {
     show_banner
-    echo -e "${GREEN}═══════════════════════════════════════${NC}"
-    echo -e "${GREEN}    PTERODACTYL PANEL INSTALLATION${NC}"
-    echo -e "${GREEN}═══════════════════════════════════════${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}            🖥️  PTERODACTYL PANEL - FULL AUTO INSTALLATION${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     
-    # Input konfigurasi dari user
-    read -p "Masukkan domain panel (contoh: panel.domain.com): " PANEL_DOMAIN
-    read -p "Masukkan email: " PANEL_EMAIL
-    read -p "Database name (default: panel): " DB_NAME
-    DB_NAME=${DB_NAME:-panel}
-    read -p "Database username (default: pterodactyl): " DB_USER
-    DB_USER=${DB_USER:-pterodactyl}
-    read -sp "Database password (kosongkan untuk random): " DB_PASS
-    echo ""
-    read -p "Username admin (default: admin): " ADMIN_USER
-    ADMIN_USER=${ADMIN_USER:-admin}
-    read -sp "Password admin: " ADMIN_PASS
-    echo ""
+    # Input dari user
+    read -p "📍 Domain Panel (ex: panel.example.com): " PANEL_DOMAIN
+    read -p "📧 Email Admin (ex: admin@example.com): " PANEL_EMAIL
     
-    # Validasi input
-    if [[ -z "$PANEL_DOMAIN" ]] || [[ -z "$PANEL_EMAIL" ]] || [[ -z "$ADMIN_PASS" ]]; then
-        print_error "Domain, email, dan password admin tidak boleh kosong!"
+    # Validasi
+    if [[ -z "$PANEL_DOMAIN" ]] || [[ -z "$PANEL_EMAIL" ]]; then
+        print_error "Domain dan email harus diisi!"
         sleep 2
         install_panel
         return
     fi
     
-    print_info "Menjalankan official pterodactyl-installer..."
+    # Generate credentials RANDOM
+    DB_NAME=$(gen_db_name)
+    DB_USER="pterodactyl"
+    DB_PASS=$(gen_password)
+    ADMIN_USER="admin"
+    ADMIN_PASS=$(gen_password)
+    CERT_EMAIL=$(gen_email)
+    
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${CYAN}           🔑 GENERATED CREDENTIALS${NC}"
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  ${WHITE}📦 Database Name:${NC}      ${YELLOW}$DB_NAME${NC}"
+    echo -e "  ${WHITE}👤 Database User:${NC}      ${YELLOW}$DB_USER${NC}"
+    echo -e "  ${WHITE}🔐 Database Pass:${NC}      ${YELLOW}$DB_PASS${NC}"
+    echo ""
+    echo -e "  ${WHITE}👨 Admin User:${NC}         ${YELLOW}$ADMIN_USER${NC}"
+    echo -e "  ${WHITE}🔑 Admin Pass:${NC}         ${YELLOW}$ADMIN_PASS${NC}"
+    echo ""
+    echo -e "  ${WHITE}📧 SSL Email:${NC}          ${YELLOW}$CERT_EMAIL${NC}"
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
     echo ""
     
-    # Buat file untuk auto-input
-    cat > /tmp/panel_input.txt <<EOF
+    print_info "Starting Panel Installation..."
+    sleep 3
+    
+    # Buat input file untuk installer
+    INPUT_FILE="/tmp/panel_input.txt"
+    cat > $INPUT_FILE <<EOF
 0
 $DB_NAME
 $DB_USER
 $DB_PASS
 Asia/Jakarta
-$PANEL_EMAIL
+$CERT_EMAIL
 $PANEL_EMAIL
 $ADMIN_USER
 admin
@@ -119,85 +162,108 @@ no
 y
 EOF
     
-    # Jalankan installer dengan auto-input
-    bash <(curl -s https://pterodactyl-installer.se) < /tmp/panel_input.txt
-    
-    # Hapus file input
-    rm -f /tmp/panel_input.txt
-    
-    # Setelah instalasi selesai
+    # Jalankan installer
+    echo -e "${CYAN}📥 Downloading and running official Pterodactyl installer...${NC}"
     echo ""
-    print_success "Instalasi Panel selesai!"
-    print_success "Panel URL: https://$PANEL_DOMAIN"
-    print_success "Admin Username: $ADMIN_USER"
-    print_success "Admin Email: $PANEL_EMAIL"
+    bash <(curl -s https://pterodactyl-installer.se) < $INPUT_FILE 2>&1 | tee /tmp/pterodactyl_install.log
     
-    # Simpan kredensial
-    INFO_FILE="/root/pterodactyl_panel_info.txt"
-    cat > $INFO_FILE <<EOF
-========================================
-PTERODACTYL PANEL - INFORMASI LOGIN
-========================================
+    # Clean up
+    rm -f $INPUT_FILE
+    
+    # Tunggu beberapa saat
+    sleep 5
+    
+    # Verify installation
+    echo ""
+    print_info "Verifying installation..."
+    
+    if [ -d "/var/www/pterodactyl" ] && [ -f "/var/www/pterodactyl/.env" ]; then
+        print_success "Panel installation verified!"
+        
+        # Save credentials to file
+        INFO_FILE="/root/pterodactyl_panel_info.txt"
+        cat > $INFO_FILE <<EOF
+╔═══════════════════════════════════════════════════════════════════════╗
+║                   PTERODACTYL PANEL - CREDENTIALS                     ║
+╚═══════════════════════════════════════════════════════════════════════╝
 
-PANEL URL: https://$PANEL_DOMAIN
+🖥️  PANEL URL:
+    https://$PANEL_DOMAIN
 
-ADMIN PANEL:
-Username: $ADMIN_USER
-Email: $PANEL_EMAIL
-Password: $ADMIN_PASS
+👤 ADMIN ACCOUNT:
+   Username:  $ADMIN_USER
+   Password:  $ADMIN_PASS
+   Email:     $PANEL_EMAIL
 
-DATABASE:
-Database: $DB_NAME
-Username: $DB_USER
-Password: $DB_PASS
+🗄️  DATABASE:
+   Name:      $DB_NAME
+   User:      $DB_USER
+   Password:  $DB_PASS
+   Host:      127.0.0.1
+   Port:      3306
 
-========================================
-Simpan informasi ini dengan aman!
-========================================
+📧 SSL CERTIFICATE EMAIL:
+   $CERT_EMAIL
+
+╔═══════════════════════════════════════════════════════════════════════╗
+⚠️  SIMPAN INFORMASI INI DI TEMPAT AMAN!
+╚═══════════════════════════════════════════════════════════════════════╝
+
+NEXT STEPS:
+1. Open https://$PANEL_DOMAIN in browser
+2. Login with:
+   - Username: $ADMIN_USER
+   - Password: $ADMIN_PASS
+3. Go to Admin → Locations → Create Location (for Wings)
+4. Go to Admin → Nodes → Create Node
+5. Copy configuration command from Node
+6. Run on Wings server
+
+═══════════════════════════════════════════════════════════════════════════
 EOF
-    
-    print_warning "Kredensial disimpan di: $INFO_FILE"
-    
-    # Tanya apakah ingin ganti database host
-    echo ""
-    echo -e "${YELLOW}Apakah ingin mengubah database host dari 127.0.0.1 ke 0.0.0.0? (y/n)${NC}"
-    read -r CHANGE_HOST
-    
-    if [[ "$CHANGE_HOST" =~ [Yy] ]]; then
-        change_db_host
+        
+        print_success "Panel info saved to: $INFO_FILE"
+        echo ""
+        echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+        cat $INFO_FILE
+        echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+        
+    else
+        print_error "Panel installation FAILED!"
+        print_warning "Check log: /tmp/pterodactyl_install.log"
+        echo ""
+        tail -50 /tmp/pterodactyl_install.log
     fi
     
     echo ""
-    echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
+    echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
-    main_menu
 }
 
-# Fungsi install wings
+# ===== INSTALL WINGS =====
 install_wings() {
     show_banner
-    echo -e "${BLUE}═══════════════════════════════════════${NC}"
-    echo -e "${BLUE}    PTERODACTYL WINGS INSTALLATION${NC}"
-    echo -e "${BLUE}═══════════════════════════════════════${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}              🪶 PTERODACTYL WINGS - INSTALLATION${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     
-    # Input konfigurasi dari user
-    read -p "Masukkan domain node (contoh: node1.domain.com): " NODE_DOMAIN
-    read -p "Masukkan email untuk Let's Encrypt: " NODE_EMAIL
+    read -p "📍 Domain Node (ex: node1.example.com): " NODE_DOMAIN
+    read -p "📧 Email for SSL (ex: admin@example.com): " NODE_EMAIL
     
-    # Validasi input
     if [[ -z "$NODE_DOMAIN" ]] || [[ -z "$NODE_EMAIL" ]]; then
-        print_error "Domain dan email tidak boleh kosong!"
+        print_error "Domain dan email harus diisi!"
         sleep 2
         install_wings
         return
     fi
     
-    print_info "Menjalankan official pterodactyl-installer..."
-    echo ""
+    print_info "Starting Wings Installation..."
+    sleep 2
     
-    # Buat file untuk auto-input installer wings
-    cat > /tmp/wings_input.txt <<EOF
+    # Create input file
+    INPUT_FILE="/tmp/wings_input.txt"
+    cat > $INPUT_FILE <<EOF
 1
 y
 n
@@ -208,548 +274,303 @@ $NODE_EMAIL
 y
 EOF
     
-    # Jalankan installer dengan auto-input
-    bash <(curl -s https://pterodactyl-installer.se) < /tmp/wings_input.txt
-    
-    # Hapus file input
-    rm -f /tmp/wings_input.txt
-    
-    # Cek apakah direktori pterodactyl sudah dibuat oleh installer
-    if [ ! -d "/etc/pterodactyl" ]; then
-        print_warning "Direktori /etc/pterodactyl belum ada, membuat..."
-        mkdir -p /etc/pterodactyl
-    fi
-    
-    # Setelah instalasi selesai
-    clear
-    show_banner
+    # Run installer
+    echo -e "${CYAN}📥 Downloading and running official Pterodactyl installer...${NC}"
     echo ""
-    print_success "Instalasi Wings selesai!"
-    echo ""
-    print_warning "═══════════════════════════════════════════════════════════"
-    print_warning "LANGKAH SELANJUTNYA - KONFIGURASI WINGS:"
-    print_warning "═══════════════════════════════════════════════════════════"
-    echo ""
-    echo "1. Login ke Panel Pterodactyl"
-    echo "2. Buka menu: Admin → Locations → Buat location baru"
-    echo "3. Buka menu: Admin → Nodes → Buat node baru"
-    echo "4. Isi informasi node:"
-    echo "   - FQDN: $NODE_DOMAIN"
-    echo "   - Scheme: HTTPS"
-    echo "5. Setelah node dibuat, klik tab 'Configuration'"
-    echo "6. Klik tombol 'Generate Token'"
-    echo "7. Copy command yang muncul"
-    echo ""
-    echo -e "${YELLOW}Contoh command:${NC}"
-    echo "cd /etc/pterodactyl && sudo wings configure --panel-url https://panel.domain.com --token ptla_xxxxx --node 1"
-    echo ""
-    print_warning "═══════════════════════════════════════════════════════════"
-    echo ""
-    echo -e "${YELLOW}Paste command dari panel di bawah ini:${NC}"
-    read -r WINGS_COMMAND
+    bash <(curl -s https://pterodactyl-installer.se) < $INPUT_FILE 2>&1 | tee /tmp/wings_install.log
     
-    # Validasi command
-    if [[ -z "$WINGS_COMMAND" ]]; then
-        print_error "Command tidak boleh kosong!"
-        echo ""
-        echo "Jalankan manual dengan command dari panel, lalu:"
-        echo "  systemctl start wings"
-        echo ""
-        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
-        read
-        main_menu
-        return
-    fi
+    rm -f $INPUT_FILE
     
-    # Jalankan command wings configure
-    print_info "Menjalankan wings configure..."
+    sleep 5
     
-    # Extract komponen dari command
-    # Command format: cd /etc/pterodactyl && sudo wings configure --panel-url URL --token TOKEN --node ID
-    if [[ "$WINGS_COMMAND" =~ --panel-url[[:space:]]+([^[:space:]]+) ]]; then
-        PANEL_URL="${BASH_REMATCH[1]}"
-    fi
-    
-    if [[ "$WINGS_COMMAND" =~ --token[[:space:]]+([^[:space:]]+) ]]; then
-        TOKEN="${BASH_REMATCH[1]}"
-    fi
-    
-    if [[ "$WINGS_COMMAND" =~ --node[[:space:]]+([^[:space:]]+) ]]; then
-        NODE_ID="${BASH_REMATCH[1]}"
-    fi
-    
-    # Validasi parameter
-    if [[ -z "$PANEL_URL" ]] || [[ -z "$TOKEN" ]] || [[ -z "$NODE_ID" ]]; then
-        print_error "Command tidak valid! Pastikan format benar."
-        echo ""
-        echo "Format yang benar:"
-        echo "cd /etc/pterodactyl && sudo wings configure --panel-url https://panel.com --token ptla_xxx --node 1"
-        echo ""
-        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
-        read
-        main_menu
-        return
-    fi
-    
-    # Pindah ke direktori pterodactyl dan jalankan wings configure
-    cd /etc/pterodactyl || {
-        print_error "Direktori /etc/pterodactyl tidak ada!"
-        echo ""
-        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
-        read
-        main_menu
-        return
-    }
-    
-    # Cek apakah wings binary ada
-    if [ ! -f "/etc/pterodactyl" ]; then
-        print_error "Wings binary tidak ditemukan di /usr/local/bin/wings"
-        print_warning "Installer mungkin gagal. Coba install ulang Wings."
-        echo ""
-        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
-        read
-        main_menu
-        return
-    fi
-    
-    # Jalankan wings configure dengan parameter yang di-extract (gunakan full path)
-    sudo wings configure --panel-url "$PANEL_URL" --token "$TOKEN" --node "$NODE_ID"
-    
-    CONFIGURE_STATUS=$?
-    
-    if [ $CONFIGURE_STATUS -eq 0 ]; then
-        print_success "Konfigurasi Wings berhasil!"
+    # Verify
+    if [ -f "/usr/local/bin/wings" ]; then
+        print_success "Wings binary installed!"
         
-        # Cek apakah config.yml sudah dibuat
-        if [ -f "/etc/pterodactyl/config.yml" ]; then
-            print_success "File config.yml berhasil dibuat!"
+        # Create pterodactyl directory if not exists
+        mkdir -p /etc/pterodactyl
+        
+        echo ""
+        echo -e "${MAGENTA}═══════════════════════════════════════════════════════════${NC}"
+        echo -e "${MAGENTA}        🔧 WINGS CONFIGURATION - IKUTI LANGKAH BERIKUT${NC}"
+        echo -e "${MAGENTA}═══════════════════════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "  ${WHITE}STEP 1:${NC} Go to Panel"
+        echo -e "           ${CYAN}https://your-panel-domain${NC}"
+        echo ""
+        echo -e "  ${WHITE}STEP 2:${NC} Navigate to:"
+        echo -e "           ${YELLOW}Admin → Locations → Create Location${NC}"
+        echo -e "           ${CYAN}(ex: Main Location)${NC}"
+        echo ""
+        echo -e "  ${WHITE}STEP 3:${NC} Navigate to:"
+        echo -e "           ${YELLOW}Admin → Nodes → Create New Node${NC}"
+        echo ""
+        echo -e "  ${WHITE}STEP 4:${NC} Fill in the form:"
+        echo -e "           ${CYAN}Name: Node1${NC}"
+        echo -e "           ${CYAN}Location: Main (pilih yang sudah dibuat)${NC}"
+        echo -e "           ${CYAN}FQDN: $NODE_DOMAIN${NC}"
+        echo -e "           ${CYAN}Scheme: HTTPS${NC}"
+        echo ""
+        echo -e "  ${WHITE}STEP 5:${NC} After creating, click:"
+        echo -e "           ${YELLOW}Configuration Tab${NC}"
+        echo ""
+        echo -e "  ${WHITE}STEP 6:${NC} Copy the FULL command that shown:"
+        echo -e "           ${YELLOW}cd /etc/pterodactyl && sudo wings configure...${NC}"
+        echo ""
+        echo -e "${MAGENTA}═══════════════════════════════════════════════════════════${NC}"
+        echo ""
+        print_info "Paste the configuration command here:"
+        read -r CONFIG_CMD
+        
+        if [[ -n "$CONFIG_CMD" ]]; then
+            print_info "Running configuration command..."
+            cd /etc/pterodactyl
+            eval "$CONFIG_CMD" 2>&1 | tee /tmp/wings_config.log
+            
+            sleep 3
+            
+            # Start wings
+            print_info "Starting Wings service..."
+            systemctl start wings
+            sleep 3
+            
+            # Check status
+            if systemctl is-active --quiet wings; then
+                print_success "Wings is RUNNING! ✅"
+                
+                # Save info
+                WINGS_INFO="/root/pterodactyl_wings_info.txt"
+                cat > $WINGS_INFO <<EOF
+╔═══════════════════════════════════════════════════════════════════════╗
+║                  PTERODACTYL WINGS - INFORMATION                      ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+🖥️  NODE DOMAIN: $NODE_DOMAIN
+📧 SSL EMAIL: $NODE_EMAIL
+
+✅ STATUS: RUNNING
+
+═══════════════════════════════════════════════════════════════════════════
+
+🛠️  USEFUL COMMANDS:
+
+  Check Status:
+  $ systemctl status wings
+
+  View Live Logs:
+  $ journalctl -u wings -f
+
+  Restart Wings:
+  $ systemctl restart wings
+
+  Stop Wings:
+  $ systemctl stop wings
+
+═══════════════════════════════════════════════════════════════════════════
+
+🔥 FIREWALL PORTS NEEDED:
+
+  8080 (TCP)     → Wings Communication
+  2022 (TCP)     → SFTP Access
+
+═══════════════════════════════════════════════════════════════════════════
+EOF
+                
+                print_success "Wings info saved to: $WINGS_INFO"
+                echo ""
+                cat $WINGS_INFO
+            else
+                print_error "Wings failed to start! ❌"
+                print_warning "Check logs with: journalctl -u wings -f"
+            fi
         else
-            print_error "File config.yml tidak ditemukan!"
+            print_warning "Configuration skipped. Configure manually with:"
             echo ""
-            echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
-            read
-            main_menu
-            return
+            echo -e "${CYAN}cd /etc/pterodactyl && sudo wings configure --panel-url https://panel.domain --token YOUR_TOKEN --node NODE_ID${NC}"
         fi
     else
-        print_error "Konfigurasi Wings gagal!"
+        print_error "Wings installation FAILED!"
+        print_warning "Check log: /tmp/wings_install.log"
         echo ""
-        echo "Coba jalankan manual:"
-        echo "  cd /etc/pterodactyl"
-        echo "  /usr/local/bin/wings configure --panel-url $PANEL_URL --token $TOKEN --node $NODE_ID"
-        echo ""
-        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
-        read
-        main_menu
-        return
+        tail -50 /tmp/wings_install.log
     fi
     
-    # Start Wings
-    print_info "Starting Wings dengan systemctl..."
-    systemctl start wings
-    
-    # Tunggu beberapa detik
-    sleep 3
-    
-    # Cek status Wings
-    if systemctl is-active --quiet wings; then
-        print_success "Wings berhasil dijalankan!"
-    else
-        print_error "Wings gagal dijalankan!"
-        print_warning "Cek log dengan: journalctl -u wings -f"
-        echo ""
-        echo "Atau coba start manual dengan: systemctl start wings"
-        echo ""
-        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
-        read
-        main_menu
-        return
-    fi
-    
-    # Tampilkan hasil
-    clear
-    show_banner
     echo ""
-    print_success "═══════════════════════════════════════"
-    print_success "   INSTALASI WINGS SELESAI!"
-    print_success "═══════════════════════════════════════"
-    echo ""
-    print_success "Domain Node: $NODE_DOMAIN"
-    print_success "Status Wings: $(systemctl is-active wings)"
-    echo ""
-    print_warning "Perintah berguna:"
-    echo "  - Cek status:  systemctl status wings"
-    echo "  - Restart:     systemctl restart wings"
-    echo "  - Stop:        systemctl stop wings"
-    echo "  - Log:         journalctl -u wings -f"
-    echo ""
-    print_warning "PENTING:"
-    echo "  - Port 8080 dan 2022 harus terbuka di firewall"
-    echo "  - Domain $NODE_DOMAIN harus mengarah ke IP server ini"
-    echo ""
-    echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
+    echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
-    main_menu
 }
 
-# Fungsi untuk mengganti database host dari 127.0.0.1 ke 0.0.0.0
+# ===== CHANGE DATABASE HOST =====
 change_db_host() {
     show_banner
-    echo -e "${YELLOW}═══════════════════════════════════════${NC}"
-    echo -e "${YELLOW}    CHANGE DATABASE HOST${NC}"
-    echo -e "${YELLOW}═══════════════════════════════════════${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${YELLOW}               🔄 CHANGE DATABASE HOST${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     
-    print_warning "Mengubah database host dari 127.0.0.1 ke 0.0.0.0..."
-    echo ""
-    
-    # File .env pterodactyl
     ENV_FILE="/var/www/pterodactyl/.env"
     
     if [ ! -f "$ENV_FILE" ]; then
-        print_error "File .env tidak ditemukan!"
-        print_error "Pastikan Panel sudah terinstall."
+        print_error "Panel tidak terinstall! File .env tidak ditemukan."
         echo ""
-        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
+        echo -e "${YELLOW}Press Enter to continue...${NC}"
         read
         return
     fi
     
-    # Backup file .env
-    print_info "Backup file .env..."
-    cp "$ENV_FILE" "${ENV_FILE}.backup.$(date +%Y%m%d%H%M%S)"
+    print_info "Backing up .env..."
+    cp "$ENV_FILE" "${ENV_FILE}.backup.$(date +%s)"
     
-    # Ganti DB_HOST dari 127.0.0.1 ke 0.0.0.0
-    if grep -q "DB_HOST=127.0.0.1" "$ENV_FILE"; then
-        sed -i 's/DB_HOST=127.0.0.1/DB_HOST=0.0.0.0/g' "$ENV_FILE"
-        print_success "DB_HOST berhasil diubah ke 0.0.0.0"
-    else
-        print_warning "DB_HOST bukan 127.0.0.1 atau sudah diubah sebelumnya"
-    fi
+    print_info "Changing DB_HOST to 0.0.0.0..."
+    sed -i 's/DB_HOST=127.0.0.1/DB_HOST=0.0.0.0/g' "$ENV_FILE"
     
-    # Konfigurasi MariaDB untuk listen pada 0.0.0.0
-    print_info "Konfigurasi MariaDB..."
-    
+    print_info "Configuring MariaDB..."
     MARIADB_CONF="/etc/mysql/mariadb.conf.d/50-server.cnf"
     
     if [ -f "$MARIADB_CONF" ]; then
-        # Backup config
-        cp "$MARIADB_CONF" "${MARIADB_CONF}.backup.$(date +%Y%m%d%H%M%S)"
+        cp "$MARIADB_CONF" "${MARIADB_CONF}.backup.$(date +%s)"
+        sed -i 's/^bind-address.*/bind-address = 0.0.0.0/' "$MARIADB_CONF"
         
-        # Ubah bind-address
-        if grep -q "bind-address.*=.*127.0.0.1" "$MARIADB_CONF"; then
-            sed -i 's/bind-address.*=.*127.0.0.1/bind-address = 0.0.0.0/g' "$MARIADB_CONF"
-            print_success "MariaDB bind-address berhasil diubah ke 0.0.0.0"
-        else
-            print_warning "bind-address tidak ditemukan atau sudah diubah"
-        fi
-        
-        # Restart MariaDB
-        print_info "Restart MariaDB..."
+        print_info "Restarting MariaDB..."
         systemctl restart mariadb
         
         if systemctl is-active --quiet mariadb; then
-            print_success "MariaDB berhasil direstart"
+            print_success "MariaDB restarted successfully"
         else
-            print_error "MariaDB gagal restart!"
+            print_error "MariaDB failed to restart!"
         fi
-    else
-        print_error "File konfigurasi MariaDB tidak ditemukan!"
     fi
     
-    # Update user database untuk allow remote connection
-    print_info "Update database user permissions..."
+    # Get DB credentials
+    DB_USER=$(grep "^DB_USERNAME=" "$ENV_FILE" | cut -d '=' -f2)
+    DB_PASS=$(grep "^DB_PASSWORD=" "$ENV_FILE" | cut -d '=' -f2)
+    DB_NAME=$(grep "^DB_DATABASE=" "$ENV_FILE" | cut -d '=' -f2)
     
-    # Ambil database credentials dari .env
-    DB_DATABASE=$(grep "^DB_DATABASE=" "$ENV_FILE" | cut -d '=' -f2)
-    DB_USERNAME=$(grep "^DB_USERNAME=" "$ENV_FILE" | cut -d '=' -f2)
-    DB_PASSWORD=$(grep "^DB_PASSWORD=" "$ENV_FILE" | cut -d '=' -f2)
+    print_info "Updating database permissions..."
     
-    if [[ -n "$DB_USERNAME" ]] && [[ -n "$DB_PASSWORD" ]]; then
-        # Hapus user lama (127.0.0.1)
-        mysql -e "DROP USER IF EXISTS '${DB_USERNAME}'@'127.0.0.1';" 2>/dev/null || true
-        
-        # Buat user baru dengan % (allow all hosts)
-        mysql -e "CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';" 2>/dev/null
-        mysql -e "GRANT ALL PRIVILEGES ON ${DB_DATABASE}.* TO '${DB_USERNAME}'@'%' WITH GRANT OPTION;" 2>/dev/null
-        mysql -e "FLUSH PRIVILEGES;" 2>/dev/null
-        
-        print_success "Database user berhasil diupdate untuk remote access"
-    else
-        print_error "Tidak dapat membaca kredensial database dari .env"
-    fi
+    # Update MySQL permissions
+    mysql -e "DROP USER IF EXISTS '${DB_USER}'@'127.0.0.1';" 2>/dev/null || true
+    mysql -e "DROP USER IF EXISTS '${DB_USER}'@'localhost';" 2>/dev/null || true
+    mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASS}';" 2>/dev/null
+    mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%' WITH GRANT OPTION;" 2>/dev/null
+    mysql -e "FLUSH PRIVILEGES;" 2>/dev/null
     
-    # Clear cache Laravel
-    print_info "Clear cache Laravel..."
+    print_success "Database user updated for remote access"
+    
+    # Clear Laravel cache
+    print_info "Clearing Laravel cache..."
     cd /var/www/pterodactyl
     php artisan config:clear
     php artisan cache:clear
     
+    print_success "Database host changed to 0.0.0.0! ✅"
     echo ""
-    print_success "═══════════════════════════════════════"
-    print_success "  Database Host berhasil diubah!"
-    print_success "═══════════════════════════════════════"
-    echo ""
-    print_warning "PENTING:"
-    echo "  - Database sekarang listen pada 0.0.0.0"
-    echo "  - Pastikan firewall dikonfigurasi dengan benar"
-    echo "  - Port MySQL (3306) sekarang dapat diakses dari luar"
-    echo "  - Gunakan dengan hati-hati untuk keamanan"
+    print_warning "⚠️  Database sekarang dapat diakses dari semua host!"
     echo ""
     
-    if [ -f "$ENV_FILE" ]; then
-        print_info "Konfigurasi database saat ini:"
-        grep "^DB_" "$ENV_FILE"
-    fi
-    
-    echo ""
+    echo -e "${YELLOW}Press Enter to continue...${NC}"
+    read
 }
 
-# Fungsi uninstall panel/wings
+# ===== UNINSTALL =====
 uninstall_pterodactyl() {
     show_banner
-    echo -e "${MAGENTA}═══════════════════════════════════════${NC}"
-    echo -e "${MAGENTA}    UNINSTALL PANEL/WINGS${NC}"
-    echo -e "${MAGENTA}═══════════════════════════════════════${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${RED}                 🗑️  UNINSTALL PTERODACTYL${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     
-    print_warning "Ini akan menghapus Pterodactyl Panel dan/atau Wings dari server!"
-    print_warning "Pastikan Anda sudah backup data penting!"
+    print_warning "⚠️  WARNING: This will DELETE Panel/Wings and all data!"
     echo ""
     
-    # Deteksi instalasi
-    PANEL_DETECTED=false
-    WINGS_DETECTED=false
-    
-    if [ -d "/var/www/pterodactyl" ]; then
-        PANEL_DETECTED=true
-        print_info "Panel terdeteksi terinstall"
-    fi
-    
-    if [ -f "/usr/local/bin/wings" ]; then
-        WINGS_DETECTED=true
-        print_info "Wings terdeteksi terinstall"
-    fi
-    
-    if [ "$PANEL_DETECTED" = false ] && [ "$WINGS_DETECTED" = false ]; then
-        print_error "Tidak ada instalasi Panel atau Wings yang terdeteksi!"
-        echo ""
-        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
-        read
-        main_menu
-        return
-    fi
-    
+    echo -e "${CYAN}What to uninstall?${NC}"
     echo ""
-    print_warning "Apa yang ingin di-uninstall?"
+    echo -e "  ${RED}[1]${NC} Panel only"
+    echo -e "  ${RED}[2]${NC} Wings only"
+    echo -e "  ${RED}[3]${NC} Both Panel & Wings"
+    echo -e "  ${RED}[4]${NC} Cancel"
     echo ""
+    echo -n "Choice [1-4]: "
+    read uninstall_choice
     
-    UNINSTALL_PANEL=false
-    UNINSTALL_WINGS=false
-    
-    # Tanya uninstall panel
-    if [ "$PANEL_DETECTED" = true ]; then
-        echo -e "${YELLOW}Uninstall Panel? (y/n):${NC}"
-        read -r REMOVE_PANEL
-        if [[ "$REMOVE_PANEL" =~ [Yy] ]]; then
-            UNINSTALL_PANEL=true
-        fi
-    fi
-    
-    # Tanya uninstall wings
-    if [ "$WINGS_DETECTED" = true ]; then
-        echo -e "${YELLOW}Uninstall Wings? ${RED}(SEMUA SERVER AKAN DIHAPUS!)${NC} ${YELLOW}(y/n):${NC}"
-        read -r REMOVE_WINGS
-        if [[ "$REMOVE_WINGS" =~ [Yy] ]]; then
-            UNINSTALL_WINGS=true
-        fi
-    fi
-    
-    # Konfirmasi
-    echo ""
-    print_warning "═══════════════════════════════════════"
-    print_warning "Konfirmasi Uninstall:"
-    echo "  - Uninstall Panel: $UNINSTALL_PANEL"
-    echo "  - Uninstall Wings: $UNINSTALL_WINGS"
-    print_warning "═══════════════════════════════════════"
-    echo ""
-    echo -e "${RED}Lanjutkan uninstall? (y/n):${NC}"
-    read -r CONFIRM_UNINSTALL
-    
-    if [[ ! "$CONFIRM_UNINSTALL" =~ [Yy] ]]; then
-        print_info "Uninstall dibatalkan"
-        echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
-        read
-        main_menu
-        return
-    fi
-    
-    # Uninstall Panel
-    if [ "$UNINSTALL_PANEL" = true ]; then
-        echo ""
-        print_warning "Menghapus Panel..."
-        
-        # Stop services
-        print_info "Stop panel services..."
-        systemctl stop pteroq 2>/dev/null || true
-        systemctl disable pteroq 2>/dev/null || true
-        
-        # Remove panel files
-        print_info "Menghapus file panel..."
-        rm -rf /var/www/pterodactyl
-        
-        # Remove nginx config
-        print_info "Menghapus konfigurasi nginx..."
-        rm -f /etc/nginx/sites-enabled/pterodactyl.conf
-        rm -f /etc/nginx/sites-available/pterodactyl.conf
-        systemctl reload nginx 2>/dev/null || true
-        
-        # Remove cron jobs
-        print_info "Menghapus cron jobs..."
-        crontab -l | grep -v 'pterodactyl' | crontab - 2>/dev/null || true
-        
-        # Remove systemd service
-        rm -f /etc/systemd/system/pteroq.service
-        systemctl daemon-reload
-        
-        print_success "Panel berhasil dihapus!"
-        
-        # Tanya hapus database
-        echo ""
-        echo -e "${YELLOW}Apakah ingin menghapus database panel? (y/n):${NC}"
-        read -r REMOVE_DB
-        
-        if [[ "$REMOVE_DB" =~ [Yy] ]]; then
-            # List databases
-            print_info "List database yang tersedia:"
-            mysql -e "SHOW DATABASES;" | grep -v "Database\|information_schema\|performance_schema\|mysql\|sys"
-            echo ""
-            read -p "Masukkan nama database yang akan dihapus (kosongkan untuk skip): " DB_NAME
-            
-            if [[ -n "$DB_NAME" ]]; then
-                mysql -e "DROP DATABASE IF EXISTS ${DB_NAME};" 2>/dev/null
-                print_success "Database ${DB_NAME} berhasil dihapus!"
-            else
-                print_info "Skip penghapusan database"
-            fi
-            
-            # Tanya hapus user
-            echo ""
-            echo -e "${YELLOW}Apakah ingin menghapus database user? (y/n):${NC}"
-            read -r REMOVE_USER
-            
-            if [[ "$REMOVE_USER" =~ [Yy] ]]; then
-                print_info "List database user yang tersedia:"
-                mysql -e "SELECT User, Host FROM mysql.user;" | grep -v "User\|root\|mysql.sys\|mysql.infoschema"
-                echo ""
-                read -p "Masukkan nama user yang akan dihapus (kosongkan untuk skip): " DB_USER
-                
-                if [[ -n "$DB_USER" ]]; then
-                    mysql -e "DROP USER IF EXISTS '${DB_USER}'@'%';" 2>/dev/null || true
-                    mysql -e "DROP USER IF EXISTS '${DB_USER}'@'localhost';" 2>/dev/null || true
-                    mysql -e "DROP USER IF EXISTS '${DB_USER}'@'127.0.0.1';" 2>/dev/null || true
-                    mysql -e "FLUSH PRIVILEGES;" 2>/dev/null
-                    print_success "User ${DB_USER} berhasil dihapus!"
-                else
-                    print_info "Skip penghapusan user"
-                fi
-            fi
-        fi
-    fi
-    
-    # Uninstall Wings
-    if [ "$UNINSTALL_WINGS" = true ]; then
-        echo ""
-        print_warning "Menghapus Wings..."
-        
-        # Stop wings service
-        print_info "Stop wings service..."
-        systemctl stop wings 2>/dev/null || true
-        systemctl disable wings 2>/dev/null || true
-        
-        # Remove wings files
-        print_info "Menghapus file wings..."
-        rm -f /usr/local/bin/wings
-        rm -rf /etc/pterodactyl
-        
-        # Remove systemd service
-        rm -f /etc/systemd/system/wings.service
-        systemctl daemon-reload
-        
-        # Tanya hapus Docker containers
-        echo ""
-        echo -e "${RED}PERINGATAN: Hapus semua Docker containers dan volumes? (y/n):${NC}"
-        read -r REMOVE_DOCKER
-        
-        if [[ "$REMOVE_DOCKER" =~ [Yy] ]]; then
-            print_info "Menghapus Docker containers..."
+    case $uninstall_choice in
+        1)
+            print_warning "Uninstalling Panel..."
+            systemctl stop pteroq 2>/dev/null || true
+            systemctl disable pteroq 2>/dev/null || true
+            rm -rf /var/www/pterodactyl
+            rm -f /etc/nginx/sites-enabled/pterodactyl.conf
+            rm -f /etc/nginx/sites-available/pterodactyl.conf
+            systemctl reload nginx 2>/dev/null || true
+            print_success "Panel uninstalled! ✅"
+            ;;
+        2)
+            print_warning "Uninstalling Wings..."
+            systemctl stop wings 2>/dev/null || true
+            systemctl disable wings 2>/dev/null || true
+            rm -f /usr/local/bin/wings
+            rm -rf /etc/pterodactyl
             docker stop $(docker ps -aq) 2>/dev/null || true
             docker rm $(docker ps -aq) 2>/dev/null || true
-            
-            print_info "Menghapus Docker volumes..."
-            docker volume rm $(docker volume ls -q) 2>/dev/null || true
-            
-            print_success "Docker containers dan volumes berhasil dihapus!"
-        else
-            print_info "Docker containers dan volumes tidak dihapus"
-        fi
-        
-        print_success "Wings berhasil dihapus!"
-    fi
+            print_success "Wings uninstalled! ✅"
+            ;;
+        3)
+            print_warning "Uninstalling Panel & Wings..."
+            systemctl stop pteroq 2>/dev/null || true
+            systemctl disable pteroq 2>/dev/null || true
+            rm -rf /var/www/pterodactyl
+            rm -f /etc/nginx/sites-enabled/pterodactyl.conf
+            systemctl stop wings 2>/dev/null || true
+            systemctl disable wings 2>/dev/null || true
+            rm -f /usr/local/bin/wings
+            rm -rf /etc/pterodactyl
+            docker stop $(docker ps -aq) 2>/dev/null || true
+            docker rm $(docker ps -aq) 2>/dev/null || true
+            print_success "Panel & Wings uninstalled! ✅"
+            ;;
+        4)
+            print_info "Uninstall cancelled"
+            ;;
+    esac
     
-    # Selesai
     echo ""
-    print_success "═══════════════════════════════════════"
-    print_success "   UNINSTALL SELESAI!"
-    print_success "═══════════════════════════════════════"
-    echo ""
-    
-    echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
+    echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
-    main_menu
 }
 
-# Fungsi menu utama
-main_menu() {
-    while true; do
-        show_menu
-        read choice
-        case $choice in
-            1)
-                install_panel
-                ;;
-            2)
-                install_wings
-                ;;
-            3)
-                change_db_host
-                echo -e "${YELLOW}Tekan Enter untuk kembali ke menu...${NC}"
-                read
-                ;;
-            4)
-                uninstall_pterodactyl
-                ;;
-            5)
-                clear
-                echo -e "${GREEN}Terima kasih telah menggunakan Pterodactyl Auto Installer!${NC}"
-                echo -e "${CYAN}Copyright © Rielliona${NC}"
-                echo ""
-                exit 0
-                ;;
-            *)
-                print_error "Pilihan tidak valid!"
-                sleep 2
-                ;;
-        esac
-    done
-}
-
-# Cek apakah dijalankan sebagai root
+# ===== MAIN =====
+# Check root
 if [ "$EUID" -ne 0 ]; then 
-    echo -e "${RED}Script ini harus dijalankan sebagai root!${NC}"
-    echo "Gunakan: sudo bash $0"
+    echo -e "${RED}This script must be run as root!${NC}"
+    echo "Usage: sudo bash installpanel.sh"
     exit 1
 fi
 
-# Jalankan menu utama
-main_menu
+# Main loop
+while true; do
+    show_menu
+    read choice
+    case $choice in
+        1) install_panel ;;
+        2) install_wings ;;
+        3) change_db_host ;;
+        4) uninstall_pterodactyl ;;
+        5) 
+            clear
+            echo -e "${MAGENTA}"
+            echo "  ██████╗ ██╗███████╗██╗     ██╗     ██╗ ██████╗ ███╗   ██╗ █████╗ "
+            echo "  ██╔══██╗██║██╔════╝██║     ██║     ██║██╔═══██╗████╗  ██║██╔══██╗"
+            echo "  ██████╔╝██║█████╗  ██║     ██║     ██║██║   ██║██╔██╗ ██║███████║"
+            echo "  ██╔══██╗██║██╔══╝  ██║     ██║     ██║██║   ██║██║╚██╗██║██╔══██║"
+            echo "  ██║  ██║██║███████╗███████╗███████╗██║╚██████╔╝██║ ╚████║██║  ██║"
+            echo "  ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝"
+            echo -e "${NC}"
+            echo ""
+            echo -e "${GREEN}Terima kasih telah menggunakan Pterodactyl Auto Installer!${NC}"
+            echo -e "${CYAN}Copyright © Paell-stunY & Rielliona${NC}"
+            echo ""
+            exit 0 
+            ;;
+        *) print_error "Invalid choice!"; sleep 2 ;;
+    esac
+done
