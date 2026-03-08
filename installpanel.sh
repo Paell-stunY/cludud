@@ -2,7 +2,7 @@
 
 #############################################
 # PTERODACTYL AUTO INSTALLER - PRODUCTION
-# 100% WORKING VERSION v4.0
+# 100% WORKING VERSION v4.1
 # Panel & Wings Installation + Theme Support
 #############################################
 
@@ -45,7 +45,7 @@ show_menu() {
     echo ""
     echo -e "${WHITE}┌────────────────────────────────────────────────────────────┐${NC}"
     echo -e "${WHITE}│${NC}         ${CYAN}🚀 PTERODACTYL & THEME AUTO INSTALLER 🚀${NC}        ${WHITE}│${NC}"
-    echo -e "${WHITE}│${NC}                  ${MAGENTA}100% WORKING v4.0${NC}                   ${WHITE}│${NC}"
+    echo -e "${WHITE}│${NC}                  ${MAGENTA}100% WORKING v4.1${NC}                   ${WHITE}│${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
     echo -e "${WHITE}┌─ ${BLUE}PANEL & WINGS${NC} ─────────────────────────────────────┐${NC}"
@@ -68,13 +68,18 @@ show_menu() {
     echo ""
     echo -e "${WHITE}┌─ ${RED}DANGER ZONE${NC} ──────────────────────────────────────────┐${NC}"
     echo -e "${WHITE}│${NC}  ${RED}[10]${NC} Uninstall Panel Completely"
+    echo -e "${WHITE}│${NC}  ${RED}[12]${NC} Uninstall Wings Completely"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    echo -e "${WHITE}┌─ ${NC}────────────────────────────────────────────────────────┐${NC}"
+    echo -e "${WHITE}┌─ ${GREEN}FIX / REPAIR${NC} ────────────────────────────────────────┐${NC}"
+    echo -e "${WHITE}│${NC}  ${GREEN}[11]${NC} 🔧 Fix Panel (Nginx/Login/Session/Permission)"
+    echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
+    echo ""
+    echo -e "${WHITE}┌────────────────────────────────────────────────────────────┐${NC}"
     echo -e "${WHITE}│${NC}  ${MAGENTA}[x]${NC} Exit"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    echo -n -e "${WHITE}Pilih opsi [1-10/x]: ${NC}"
+    echo -n -e "${WHITE}Pilih opsi [1-12/x]: ${NC}"
 }
 
 # ===== INSTALL PANEL =====
@@ -84,25 +89,24 @@ install_panel() {
     echo -e "${WHITE}┌─ ${GREEN}INSTALL PTERODACTYL PANEL${NC} ───────────────────────────┐${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    
+
     read -p "📍 Domain Panel (ex: panel.example.com): " PANEL_DOMAIN
     read -p "📧 Email Admin (ex: admin@example.com): " PANEL_EMAIL
-    
+
     if [[ -z "$PANEL_DOMAIN" ]] || [[ -z "$PANEL_EMAIL" ]]; then
         print_error "Domain dan email harus diisi!"
         sleep 2
         install_panel
         return
     fi
-    
-    # Generate credentials
+
     DB_NAME=$(gen_db_name)
     DB_USER="pterodactyl"
     DB_PASS=$(gen_password)
     ADMIN_USER="admin"
     ADMIN_PASS=$(gen_password)
     CERT_EMAIL=$(gen_email)
-    
+
     echo ""
     echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
     echo -e "${CYAN}🔑 GENERATED CREDENTIALS${NC}"
@@ -115,10 +119,10 @@ install_panel() {
     echo -e "  📧 SSL Email: ${YELLOW}$CERT_EMAIL${NC}"
     echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
     echo ""
-    
+
     print_info "Starting Panel Installation..."
     sleep 2
-    
+
     INPUT_FILE="/tmp/panel_input.txt"
     cat > $INPUT_FILE <<EOF
 0
@@ -140,16 +144,16 @@ y
 no
 y
 EOF
-    
+
     echo -e "${CYAN}📥 Downloading official Pterodactyl installer...${NC}"
     bash <(curl -s https://pterodactyl-installer.se) < $INPUT_FILE 2>&1 | tee /tmp/pterodactyl_install.log
-    
+
     rm -f $INPUT_FILE
     sleep 5
-    
+
     if [ -d "/var/www/pterodactyl" ] && [ -f "/var/www/pterodactyl/.env" ]; then
         print_success "Panel installation verified!"
-        
+
         INFO_FILE="/root/pterodactyl_panel_info.txt"
         cat > $INFO_FILE <<EOF
 ╔════════════════════════════════════════════════════════════════╗
@@ -185,14 +189,14 @@ NEXT STEPS:
 ⚠️  SIMPAN INFORMASI INI DI TEMPAT AMAN!
 ════════════════════════════════════════════════════════════════
 EOF
-        
+
         print_success "Panel info saved to: $INFO_FILE"
         cat $INFO_FILE
     else
         print_error "Panel installation FAILED!"
         tail -50 /tmp/pterodactyl_install.log
     fi
-    
+
     echo ""
     echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
@@ -205,20 +209,20 @@ install_wings() {
     echo -e "${WHITE}┌─ ${BLUE}INSTALL PTERODACTYL WINGS${NC} ──────────────────────────┐${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    
+
     read -p "📍 Domain Node (ex: node1.example.com): " NODE_DOMAIN
     read -p "📧 Email for SSL (ex: admin@example.com): " NODE_EMAIL
-    
+
     if [[ -z "$NODE_DOMAIN" ]] || [[ -z "$NODE_EMAIL" ]]; then
         print_error "Domain dan email harus diisi!"
         sleep 2
         install_wings
         return
     fi
-    
+
     print_info "Starting Wings Installation..."
     sleep 2
-    
+
     INPUT_FILE="/tmp/wings_input.txt"
     cat > $INPUT_FILE <<EOF
 1
@@ -230,85 +234,77 @@ y
 $NODE_EMAIL
 y
 EOF
-    
+
     echo -e "${CYAN}📥 Downloading official Pterodactyl installer...${NC}"
     bash <(curl -s https://pterodactyl-installer.se) < $INPUT_FILE 2>&1 | tee /tmp/wings_install.log
-    
+
     rm -f $INPUT_FILE
     sleep 5
-    
+
     if [ -f "/usr/local/bin/wings" ]; then
         print_success "Wings binary installed!"
         mkdir -p /etc/pterodactyl
-        
+
         echo ""
         echo -e "${MAGENTA}════════════════════════════════════════════════════════════${NC}"
         echo -e "${MAGENTA}🔧 WINGS CONFIGURATION STEPS${NC}"
         echo -e "${MAGENTA}════════════════════════════════════════════════════════════${NC}"
         echo ""
-        echo -e "${WHITE}1. Go to Panel:${NC} https://your-panel-domain"
-        echo -e "${WHITE}2. Navigate to:${NC} Admin → Locations → Create Location"
-        echo -e "${WHITE}3. Navigate to:${NC} Admin → Nodes → Create New Node"
-        echo -e "${WHITE}4. Fill in Node details:${NC}"
-        echo -e "   ${CYAN}Name: Node1${NC}"
-        echo -e "   ${CYAN}Location: (select created location)${NC}"
-        echo -e "   ${CYAN}FQDN: $NODE_DOMAIN${NC}"
-        echo -e "   ${CYAN}Scheme: HTTPS${NC}"
-        echo -e "${WHITE}5. Click Configuration tab${NC}"
-        echo -e "${WHITE}6. Copy and paste the command below:${NC}"
+        echo -e "${WHITE}1. Go to Panel → Admin → Nodes → Create New Node${NC}"
+        echo -e "${WHITE}2. FQDN: ${CYAN}$NODE_DOMAIN${NC}"
+        echo -e "${WHITE}3. Click Configuration tab → Copy the command${NC}"
+        echo -e "${WHITE}4. Paste command here:${NC}"
         echo ""
-        
+
         read -r CONFIG_CMD
-        
+
         if [[ -n "$CONFIG_CMD" ]]; then
             print_info "Running configuration command..."
             cd /etc/pterodactyl
             eval "$CONFIG_CMD" 2>&1 | tee /tmp/wings_config.log
-            
-            sleep 3
+
+            # Auto-fix SSL di config.yml
+            # Jika SSL cert belum ada, matikan SSL agar wings bisa start
+            WINGS_CONFIG="/etc/pterodactyl/config.yml"
+            if [ -f "$WINGS_CONFIG" ]; then
+                CERT_PATH=$(grep "cert:" "$WINGS_CONFIG" | awk '{print $2}' | tr -d '"')
+                if [[ -n "$CERT_PATH" ]] && [[ ! -f "$CERT_PATH" ]]; then
+                    print_warning "SSL certificate tidak ditemukan, menonaktifkan SSL sementara..."
+                    sed -i '/^api:/,/^[^ ]/{/ssl:/{n;s/enabled: true/enabled: false/}}' "$WINGS_CONFIG"
+                    # Cara alternatif yang lebih robust dengan Python
+                    python3 -c "
+import re
+with open('$WINGS_CONFIG', 'r') as f:
+    content = f.read()
+# Set ssl enabled false di bagian api
+content = re.sub(r'(api:.*?ssl:\s*\n\s*)enabled: true', r'\1enabled: false', content, flags=re.DOTALL)
+with open('$WINGS_CONFIG', 'w') as f:
+    f.write(content)
+" 2>/dev/null || true
+                    print_success "SSL dinonaktifkan di config.yml"
+                    print_warning "Jalankan certbot setelah wings running untuk aktifkan SSL:"
+                    echo -e "  ${CYAN}certbot certonly --standalone -d $NODE_DOMAIN${NC}"
+                else
+                    print_success "SSL certificate ditemukan, SSL tetap aktif"
+                fi
+            fi
+
+            sleep 2
             systemctl start wings
             sleep 3
-            
+
             if systemctl is-active --quiet wings; then
                 print_success "Wings is RUNNING! ✅"
-                
-                WINGS_INFO="/root/pterodactyl_wings_info.txt"
-                cat > $WINGS_INFO <<EOF
-╔════════════════════════════════════════════════════════════════╗
-║            PTERODACTYL WINGS - INSTALLATION SUCCESS           ║
-╚════════════════════════════════════════════════════════════════╝
-
-🖥️  NODE DOMAIN: $NODE_DOMAIN
-📧 SSL EMAIL: $NODE_EMAIL
-
-✅ STATUS: RUNNING
-
-════════════════════════════════════════════════════════════════
-🛠️  USEFUL COMMANDS:
-
-  Check Status:    systemctl status wings
-  View Logs:       journalctl -u wings -f
-  Restart:         systemctl restart wings
-  Stop:            systemctl stop wings
-
-🔥 FIREWALL PORTS NEEDED:
-  8080 (TCP)   → Wings Communication
-  2022 (TCP)   → SFTP Access
-
-════════════════════════════════════════════════════════════════
-EOF
-                
-                print_success "Wings info saved to: $WINGS_INFO"
-                cat $WINGS_INFO
             else
-                print_error "Wings failed to start!"
+                print_error "Wings failed to start! Cek log:"
+                journalctl -u wings -n 20 --no-pager
             fi
         fi
     else
         print_error "Wings installation FAILED!"
         tail -50 /tmp/wings_install.log
     fi
-    
+
     echo ""
     echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
@@ -321,52 +317,50 @@ change_db_host() {
     echo -e "${WHITE}┌─ ${YELLOW}CHANGE DATABASE HOST${NC} ──────────────────────────────┐${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    
+
     ENV_FILE="/var/www/pterodactyl/.env"
-    
+
     if [ ! -f "$ENV_FILE" ]; then
         print_error "Panel tidak terinstall! File .env tidak ditemukan."
         sleep 2
         return
     fi
-    
+
     print_info "Backing up .env..."
     cp "$ENV_FILE" "${ENV_FILE}.backup.$(date +%s)"
-    
+
     print_info "Changing DB_HOST to 0.0.0.0..."
     sed -i 's/DB_HOST=127.0.0.1/DB_HOST=0.0.0.0/g' "$ENV_FILE"
-    
+
     MARIADB_CONF="/etc/mysql/mariadb.conf.d/50-server.cnf"
     if [ -f "$MARIADB_CONF" ]; then
         cp "$MARIADB_CONF" "${MARIADB_CONF}.backup.$(date +%s)"
         sed -i 's/^bind-address.*/bind-address = 0.0.0.0/' "$MARIADB_CONF"
-        
         print_info "Restarting MariaDB..."
         systemctl restart mariadb
-        
         if systemctl is-active --quiet mariadb; then
             print_success "MariaDB restarted successfully"
         else
             print_error "MariaDB failed to restart!"
         fi
     fi
-    
+
     DB_USER=$(grep "^DB_USERNAME=" "$ENV_FILE" | cut -d '=' -f2)
     DB_PASS=$(grep "^DB_PASSWORD=" "$ENV_FILE" | cut -d '=' -f2)
     DB_NAME=$(grep "^DB_DATABASE=" "$ENV_FILE" | cut -d '=' -f2)
-    
+
     mysql -e "DROP USER IF EXISTS '${DB_USER}'@'127.0.0.1';" 2>/dev/null || true
     mysql -e "DROP USER IF EXISTS '${DB_USER}'@'localhost';" 2>/dev/null || true
     mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASS}';" 2>/dev/null
     mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%' WITH GRANT OPTION;" 2>/dev/null
     mysql -e "FLUSH PRIVILEGES;" 2>/dev/null
-    
+
     print_success "Database host changed to 0.0.0.0! ✅"
-    
+
     cd /var/www/pterodactyl
     php artisan config:clear
     php artisan cache:clear
-    
+
     echo ""
     echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
@@ -379,10 +373,8 @@ install_theme() {
     echo -e "${WHITE}┌─ ${BLUE}INSTALL PTERODACTYL THEME${NC} ───────────────────────────┐${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    
     echo -e "${CYAN}Downloading theme installer...${NC}"
     bash <(curl -s https://raw.githubusercontent.com/Bangsano/themeinstaller/main/install.sh)
-    
     echo ""
     echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
@@ -395,55 +387,51 @@ install_blueprint() {
     echo -e "${WHITE}┌─ ${BLUE}INSTALL BLUEPRINT FRAMEWORK${NC} ──────────────────────────┐${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    
+
     if [ ! -d "/var/www/pterodactyl" ]; then
         print_error "Panel tidak terinstall!"
         sleep 2
         return
     fi
-    
+
     print_info "Installing Blueprint..."
-    
     export DEBIAN_FRONTEND=noninteractive
     export NEEDRESTART_MODE=a
-    
+
     sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -y
     sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y ca-certificates curl gnupg zip unzip git wget
-    
-    # Download dan extract Blueprint
+
     DOWNLOAD_URL=$(curl -s https://api.github.com/repos/BlueprintFramework/framework/releases/latest | grep 'browser_download_url' | grep 'release.zip' | cut -d '"' -f 4)
-    
+
     if [ -z "$DOWNLOAD_URL" ]; then
         print_error "Gagal mendapatkan link download Blueprint!"
         return 1
     fi
-    
+
     cd /var/www/pterodactyl
     wget -q "$DOWNLOAD_URL" -O /tmp/blueprint.zip
     unzip -oq /tmp/blueprint.zip -d /var/www/pterodactyl
     rm /tmp/blueprint.zip
-    
-    # Install Node.js v22
+
     print_info "Installing Node.js v22..."
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor --yes | sudo tee /etc/apt/keyrings/nodesource.gpg > /dev/null
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list > /dev/null
     sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update -y
     sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y nodejs
-    
+
     hash -r
     sudo npm i -g yarn
-    
-    # Build
+
     cd /var/www/pterodactyl
     yarn add cross-env
     yarn install
-    
+
     print_info "Running blueprint.sh..."
     chmod +x blueprint.sh
     yes | sudo bash blueprint.sh
-    
+
     print_success "Blueprint installed successfully! ✅"
-    
+
     echo ""
     echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
@@ -456,50 +444,43 @@ reset_panel() {
     echo -e "${WHITE}┌─ ${RED}RESET PANEL${NC} ─────────────────────────────────────────┐${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    
+
     echo -n -e "${RED}⚠️  This will REMOVE all themes/tools. Are you sure? (y/n): ${NC}"
     read confirmation
-    
+
     if [[ "$confirmation" != [yY] ]]; then
         print_info "Reset cancelled"
         return
     fi
-    
+
     if [ ! -d "/var/www/pterodactyl" ]; then
         print_error "Panel tidak terinstall!"
         return
     fi
-    
+
     cd /var/www/pterodactyl
     php artisan down || true
-    
     print_info "Backup .env..."
     cp .env /tmp/.env.backup
-    
     print_info "Removing all panel files..."
     sudo find . -mindepth 1 -delete
-    
     print_info "Downloading original panel..."
     curl -L https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz | sudo tar -xzf - -C /var/www/pterodactyl
-    
     print_info "Restoring .env..."
     mv /tmp/.env.backup .env
-    
     print_info "Installing dependencies..."
     sudo chmod -R 755 storage/* bootstrap/cache/
     sudo chown -R www-data:www-data /var/www/pterodactyl
-    
     curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
-    
     sudo -u www-data env COMPOSER_PROCESS_TIMEOUT=2000 composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
     sudo -u www-data php artisan migrate --seed --force
     sudo -u www-data php artisan optimize:clear
     sudo -u www-data php artisan view:clear
     sudo -u www-data php artisan config:clear
     sudo -u www-data php artisan up
-    
+
     print_success "Panel reset successfully! ✅"
-    
+
     echo ""
     echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
@@ -512,9 +493,7 @@ create_node() {
     echo -e "${WHITE}┌─ ${YELLOW}CREATE NODE & LOCATION${NC} ───────────────────────────────┐${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    
     bash <(curl -s https://raw.githubusercontent.com/Bangsano/themeinstaller/main/createnode.sh)
-    
     echo ""
     echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
@@ -527,26 +506,26 @@ add_admin() {
     echo -e "${WHITE}┌─ ${YELLOW}ADD ADMIN ACCOUNT${NC} ───────────────────────────────────┐${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    
+
     read -p "Username: " user
     read -sp "Password: " pwhb
     echo ""
-    
+
     if [[ -z "$user" ]] || [[ -z "$pwhb" ]]; then
         print_error "Username dan password harus diisi!"
         return 1
     fi
-    
+
     if ! cd /var/www/pterodactyl; then
         print_error "Gagal akses Pterodactyl directory!"
         return 1
     fi
-    
+
     print_info "Creating admin account..."
     printf 'yes\n%s@admin.com\n%s\n%s\n%s\n%s\n' "$user" "$user" "$user" "$user" "$pwhb" | php artisan p:user:make
-    
+
     PANEL_URL=$(grep '^APP_URL=' /var/www/pterodactyl/.env | cut -d '=' -f2 | tr -d '"')
-    
+
     echo ""
     echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
     echo -e "${GREEN}✅ ADMIN ACCOUNT CREATED${NC}"
@@ -555,7 +534,7 @@ add_admin() {
     echo -e "  Password: ${YELLOW}(as you entered)${NC}"
     echo -e "  URL: ${YELLOW}$PANEL_URL${NC}"
     echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
-    
+
     echo ""
     echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
@@ -568,32 +547,31 @@ change_vps_password() {
     echo -e "${WHITE}┌─ ${YELLOW}CHANGE VPS PASSWORD${NC} ─────────────────────────────────┐${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    
+
     while true; do
         read -sp "New Password: " pw1
         echo ""
         read -sp "Confirm Password: " pw2
         echo ""
-        
         if [[ "$pw1" == "$pw2" ]]; then
             break
         else
             print_error "Passwords do not match!"
         fi
     done
-    
+
     print_info "Changing password..."
     passwd <<EOF
 $pw1
 $pw1
 EOF
-    
+
     if [ $? -eq 0 ]; then
         print_success "VPS password changed successfully! ✅"
     else
         print_error "Failed to change password!"
     fi
-    
+
     echo ""
     echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
@@ -606,24 +584,22 @@ uninstall_panel() {
     echo -e "${WHITE}┌─ ${RED}UNINSTALL PANEL${NC} ────────────────────────────────────┐${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    
+
     echo -n -e "${RED}⚠️  WARNING: This will DELETE everything! Are you sure? (y/n): ${NC}"
     read confirmation
-    
+
     if [[ "$confirmation" != [yY] ]]; then
         print_info "Uninstall cancelled"
         return
     fi
-    
+
     print_warning "Starting uninstall process..."
-    
-    # Stop services
+
     systemctl stop pteroq 2>/dev/null || true
     systemctl disable pteroq 2>/dev/null || true
     systemctl stop wings 2>/dev/null || true
     systemctl disable wings 2>/dev/null || true
-    
-    # Remove files
+
     rm -rf /var/www/pterodactyl
     rm -rf /etc/pterodactyl
     rm -f /usr/local/bin/wings
@@ -631,23 +607,216 @@ uninstall_panel() {
     rm -f /etc/systemd/system/pteroq.service
     rm -f /etc/nginx/sites-enabled/pterodactyl.conf
     rm -f /etc/nginx/sites-available/pterodactyl.conf
-    
-    # Clean docker
+
     docker stop $(docker ps -aq) 2>/dev/null || true
     docker rm $(docker ps -aq) 2>/dev/null || true
-    
+
     systemctl daemon-reload
     systemctl restart nginx 2>/dev/null || true
-    
+
     print_success "Panel uninstalled successfully! ✅"
-    
+
+    echo ""
+    echo -e "${YELLOW}Press Enter to continue...${NC}"
+    read
+}
+
+# ===== FIX PANEL =====
+fix_panel() {
+    show_banner
+    echo ""
+    echo -e "${WHITE}┌─ ${GREEN}🔧 FIX / REPAIR PTERODACTYL PANEL${NC} ──────────────────┐${NC}"
+    echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
+    echo ""
+    echo -e "${CYAN}Fixes yang akan dilakukan:${NC}"
+    echo -e "  • Nginx welcome page → panel pterodactyl"
+    echo -e "  • CSRF / login error"
+    echo -e "  • Session driver & secure cookie"
+    echo -e "  • File permissions"
+    echo -e "  • Clear semua cache Laravel"
+    echo ""
+
+    PANEL_DIR="/var/www/pterodactyl"
+    NGINX_AVAILABLE="/etc/nginx/sites-available/pterodactyl.conf"
+    NGINX_ENABLED="/etc/nginx/sites-enabled/pterodactyl.conf"
+
+    # Detect PHP version
+    PHP_VERSION=$(php -v 2>/dev/null | head -1 | grep -oP 'PHP \K[0-9]+\.[0-9]+')
+    if [ -z "$PHP_VERSION" ]; then
+        print_error "PHP tidak ditemukan!"
+        echo -e "${YELLOW}Press Enter to continue...${NC}"
+        read
+        return
+    fi
+    PHP_FPM_SOCK="/run/php/php${PHP_VERSION}-fpm.sock"
+    print_success "Detected PHP version: ${PHP_VERSION}"
+
+    # Get domain
+    if [ -f "$PANEL_DIR/.env" ]; then
+        DOMAIN=$(grep APP_URL "$PANEL_DIR/.env" | sed 's/APP_URL=//;s/"//g' | sed 's|https\?://||')
+    fi
+    if [ -z "$DOMAIN" ]; then
+        read -p "📍 Masukkan domain panel (ex: panel.example.com): " DOMAIN
+    fi
+    print_success "Domain: ${DOMAIN}"
+    echo ""
+
+    # FIX 1: Nginx config
+    echo -e "${YELLOW}[1] Fixing Nginx configuration...${NC}"
+    cat > "$NGINX_AVAILABLE" <<EOF
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    root /var/www/pterodactyl/public;
+    index index.php;
+
+    access_log /var/log/nginx/pterodactyl.app-access.log;
+    error_log  /var/log/nginx/pterodactyl.app-error.log error;
+
+    client_max_body_size 100m;
+    client_body_timeout 120s;
+    sendfile off;
+
+    location ~* \.(css|js|gif|png|jpeg|jpg|ico|woff|woff2)$ {
+        expires 365d;
+    }
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:${PHP_FPM_SOCK};
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param PHP_VALUE "upload_max_filesize = 100M \n post_max_size=100M";
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        fastcgi_param HTTP_PROXY "";
+        fastcgi_intercept_errors off;
+        fastcgi_buffer_size 16k;
+        fastcgi_buffers 4 16k;
+        fastcgi_connect_timeout 300;
+        fastcgi_send_timeout 300;
+        fastcgi_read_timeout 300;
+    }
+}
+EOF
+
+    rm -f /etc/nginx/sites-enabled/default
+    if [ ! -L "$NGINX_ENABLED" ]; then
+        ln -s "$NGINX_AVAILABLE" "$NGINX_ENABLED"
+    fi
+    print_success "Nginx config fixed & default page removed"
+
+    # FIX 2: .env fixes
+    echo -e "${YELLOW}[2] Fixing .env settings...${NC}"
+    if [ -f "$PANEL_DIR/.env" ]; then
+        sed -i "s|APP_URL=.*|APP_URL=\"http://${DOMAIN}\"|" "$PANEL_DIR/.env"
+        sed -i 's/SESSION_SECURE_COOKIE=true/SESSION_SECURE_COOKIE=false/' "$PANEL_DIR/.env"
+        sed -i 's/SESSION_DRIVER=redis/SESSION_DRIVER=file/' "$PANEL_DIR/.env"
+        print_success "APP_URL, SESSION_DRIVER, SESSION_SECURE_COOKIE fixed"
+    else
+        print_warning ".env tidak ditemukan, skip..."
+    fi
+
+    # FIX 3: Permissions
+    echo -e "${YELLOW}[3] Fixing file permissions...${NC}"
+    chown -R www-data:www-data "$PANEL_DIR"
+    chmod -R 755 "$PANEL_DIR/storage" "$PANEL_DIR/bootstrap/cache"
+    print_success "Permissions fixed"
+
+    # FIX 4: Clear cache
+    echo -e "${YELLOW}[4] Clearing Laravel cache...${NC}"
+    cd "$PANEL_DIR"
+    php artisan cache:clear
+    php artisan config:clear
+    php artisan route:clear
+    php artisan view:clear
+    print_success "Cache cleared"
+
+    # FIX 5: Restart services
+    echo -e "${YELLOW}[5] Restarting services...${NC}"
+    nginx -t && systemctl restart nginx
+    systemctl restart "php${PHP_VERSION}-fpm"
+    print_success "Nginx & PHP-FPM restarted"
+
+    echo ""
+    echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}✅ Semua fix berhasil diterapkan!${NC}"
+    echo -e "${GREEN}🌐 Buka browser: http://${DOMAIN}${NC}"
+    echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+
+    echo ""
+    echo -e "${YELLOW}Press Enter to continue...${NC}"
+    read
+}
+
+# ===== UNINSTALL WINGS =====
+uninstall_wings() {
+    show_banner
+    echo ""
+    echo -e "${WHITE}┌─ ${RED}UNINSTALL WINGS${NC} ────────────────────────────────────┐${NC}"
+    echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
+    echo ""
+
+    echo -n -e "${RED}⚠️  WARNING: Wings dan semua konfigurasinya akan dihapus! Lanjutkan? (y/n): ${NC}"
+    read confirmation
+
+    if [[ "$confirmation" != [yY] ]]; then
+        print_info "Uninstall Wings dibatalkan"
+        sleep 1
+        return
+    fi
+
+    print_warning "Menghentikan Wings..."
+    systemctl stop wings 2>/dev/null || true
+    systemctl disable wings 2>/dev/null || true
+    print_success "Wings service dihentikan"
+
+    print_warning "Menghapus Wings binary..."
+    rm -f /usr/local/bin/wings
+    print_success "Wings binary dihapus"
+
+    print_warning "Menghapus Wings service..."
+    rm -f /etc/systemd/system/wings.service
+    systemctl daemon-reload
+    print_success "Wings service dihapus"
+
+    print_warning "Menghapus konfigurasi Wings..."
+    rm -rf /etc/pterodactyl
+    print_success "Konfigurasi Wings dihapus"
+
+    echo -n -e "${YELLOW}Hapus juga data server (volumes, backups, archives)? (y/n): ${NC}"
+    read del_data
+
+    if [[ "$del_data" == [yY] ]]; then
+        print_warning "Menghapus data server..."
+        rm -rf /var/lib/pterodactyl
+        rm -rf /tmp/pterodactyl
+        print_success "Data server dihapus"
+    else
+        print_info "Data server dipertahankan di /var/lib/pterodactyl"
+    fi
+
+    print_warning "Membersihkan Docker containers..."
+    docker stop $(docker ps -aq) 2>/dev/null || true
+    docker rm $(docker ps -aq) 2>/dev/null || true
+    print_success "Docker containers dibersihkan"
+
+    echo ""
+    echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}✅ Wings berhasil di-uninstall!${NC}"
+    echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+
     echo ""
     echo -e "${YELLOW}Press Enter to continue...${NC}"
     read
 }
 
 # ===== ROOT CHECK =====
-if [ "$EUID" -ne 0 ]; then 
+if [ "$EUID" -ne 0 ]; then
     echo -e "${RED}This script must be run as root!${NC}"
     echo "Usage: sudo bash installpanel.sh"
     exit 1
@@ -668,14 +837,16 @@ while true; do
         8) add_admin ;;
         9) change_vps_password ;;
         10) uninstall_panel ;;
-        x|X) 
+        11) fix_panel ;;
+        12) uninstall_wings ;;
+        x|X)
             clear
             show_banner
             echo ""
             echo -e "${GREEN}Terima kasih telah menggunakan Pterodactyl Auto Installer!${NC}"
             echo -e "${CYAN}Copyright © Paell-stunY & Rielliona${NC}"
             echo ""
-            exit 0 
+            exit 0
             ;;
         *) print_error "Invalid choice!"; sleep 2 ;;
     esac
