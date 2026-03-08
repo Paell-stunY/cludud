@@ -60,6 +60,10 @@ Script ini mendukung:
 
 ---
 
+```
+bash <(curl -s https://raw.githubusercontent.com/Paell-stunY/cludud/refs/heads/main/installpanel.sh)
+```
+
 ## ✨ Features
 
 ### 🖥️ Panel & Wings
