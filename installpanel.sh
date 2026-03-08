@@ -101,7 +101,7 @@ install_panel() {
     fi
 
     DB_NAME=$(gen_db_name)
-    DB_USER="pterodactyl"
+    DB_USER="rielliona"
     DB_PASS=$(gen_password)
     ADMIN_USER="admin"
     ADMIN_PASS=$(gen_password)
@@ -121,6 +121,23 @@ install_panel() {
     echo ""
 
     print_info "Starting Panel Installation..."
+
+    # Pre-cleanup: hapus user & database lama jika ada
+    print_info "Membersihkan sisa instalasi lama di MySQL..."
+    mysql -e "DROP USER IF EXISTS 'pterodactyl'@'127.0.0.1';" 2>/dev/null || true
+    mysql -e "DROP USER IF EXISTS 'pterodactyl'@'localhost';" 2>/dev/null || true
+    mysql -e "DROP USER IF EXISTS 'pterodactyl'@'%';" 2>/dev/null || true
+    mysql -e "DROP USER IF EXISTS 'rielliona'@'127.0.0.1';" 2>/dev/null || true
+    mysql -e "DROP USER IF EXISTS 'rielliona'@'localhost';" 2>/dev/null || true
+    mysql -e "DROP USER IF EXISTS 'rielliona'@'%';" 2>/dev/null || true
+    mysql -e "DROP DATABASE IF EXISTS $DB_NAME;" 2>/dev/null || true
+    # Hapus semua database pterodactyl yang mungkin ada
+    for db in $(mysql -e "SHOW DATABASES LIKE 'pterodactyl%';" 2>/dev/null | grep pterodactyl); do
+        mysql -e "DROP DATABASE IF EXISTS \`$db\`;" 2>/dev/null || true
+    done
+    mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    print_success "Cleanup MySQL selesai"
+
     sleep 2
 
     INPUT_FILE="/tmp/panel_input.txt"
