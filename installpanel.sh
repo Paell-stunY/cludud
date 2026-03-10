@@ -2,7 +2,7 @@
 
 #############################################
 # PTERODACTYL AUTO INSTALLER - PRODUCTION
-# 100% WORKING VERSION v4.1
+# 100% WORKING VERSION v4.2
 # Panel & Wings Installation + Theme Support
 #############################################
 
@@ -45,7 +45,7 @@ show_menu() {
     echo ""
     echo -e "${WHITE}┌────────────────────────────────────────────────────────────┐${NC}"
     echo -e "${WHITE}│${NC}         ${CYAN}🚀 PTERODACTYL & THEME AUTO INSTALLER 🚀${NC}        ${WHITE}│${NC}"
-    echo -e "${WHITE}│${NC}                  ${MAGENTA}100% WORKING v4.1${NC}                   ${WHITE}│${NC}"
+    echo -e "${WHITE}│${NC}                  ${MAGENTA}100% WORKING v4.3${NC}                   ${WHITE}│${NC}"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
     echo -e "${WHITE}┌─ ${BLUE}PANEL & WINGS${NC} ─────────────────────────────────────┐${NC}"
@@ -73,13 +73,18 @@ show_menu() {
     echo ""
     echo -e "${WHITE}┌─ ${GREEN}FIX / REPAIR${NC} ────────────────────────────────────────┐${NC}"
     echo -e "${WHITE}│${NC}  ${GREEN}[11]${NC} 🔧 Fix Panel (Nginx/Login/Session/Permission)"
+    echo -e "${WHITE}│${NC}  ${GREEN}[13]${NC} 🔧 Fix Wings (SSL/Docker/Config/Token)"
+    echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
+    echo ""
+    echo -e "${WHITE}┌─ ${CYAN}DATABASE${NC} ───────────────────────────────────────────┐${NC}"
+    echo -e "${WHITE}│${NC}  ${CYAN}[14]${NC} 🗄️  Install Database Website"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
     echo -e "${WHITE}┌────────────────────────────────────────────────────────────┐${NC}"
     echo -e "${WHITE}│${NC}  ${MAGENTA}[x]${NC} Exit"
     echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
     echo ""
-    echo -n -e "${WHITE}Pilih opsi [1-12/x]: ${NC}"
+    echo -n -e "${WHITE}Pilih opsi [1-13/x]: ${NC}"
 }
 
 # ===== INSTALL PANEL =====
@@ -122,7 +127,6 @@ install_panel() {
 
     print_info "Starting Panel Installation..."
 
-    # Pre-cleanup: hapus user & database lama jika ada
     print_info "Membersihkan sisa instalasi lama di MySQL..."
     mysql -e "DROP USER IF EXISTS 'pterodactyl'@'127.0.0.1';" 2>/dev/null || true
     mysql -e "DROP USER IF EXISTS 'pterodactyl'@'localhost';" 2>/dev/null || true
@@ -131,7 +135,6 @@ install_panel() {
     mysql -e "DROP USER IF EXISTS 'rielliona'@'localhost';" 2>/dev/null || true
     mysql -e "DROP USER IF EXISTS 'rielliona'@'%';" 2>/dev/null || true
     mysql -e "DROP DATABASE IF EXISTS $DB_NAME;" 2>/dev/null || true
-    # Hapus semua database pterodactyl yang mungkin ada
     for db in $(mysql -e "SHOW DATABASES LIKE 'pterodactyl%';" 2>/dev/null | grep pterodactyl); do
         mysql -e "DROP DATABASE IF EXISTS \`$db\`;" 2>/dev/null || true
     done
@@ -280,20 +283,15 @@ EOF
             cd /etc/pterodactyl
             eval "$CONFIG_CMD" 2>&1 | tee /tmp/wings_config.log
 
-            # Auto-fix SSL di config.yml
-            # Jika SSL cert belum ada, matikan SSL agar wings bisa start
             WINGS_CONFIG="/etc/pterodactyl/config.yml"
             if [ -f "$WINGS_CONFIG" ]; then
                 CERT_PATH=$(grep "cert:" "$WINGS_CONFIG" | awk '{print $2}' | tr -d '"')
                 if [[ -n "$CERT_PATH" ]] && [[ ! -f "$CERT_PATH" ]]; then
                     print_warning "SSL certificate tidak ditemukan, menonaktifkan SSL sementara..."
-                    sed -i '/^api:/,/^[^ ]/{/ssl:/{n;s/enabled: true/enabled: false/}}' "$WINGS_CONFIG"
-                    # Cara alternatif yang lebih robust dengan Python
                     python3 -c "
 import re
 with open('$WINGS_CONFIG', 'r') as f:
     content = f.read()
-# Set ssl enabled false di bagian api
 content = re.sub(r'(api:.*?ssl:\s*\n\s*)enabled: true', r'\1enabled: false', content, flags=re.DOTALL)
 with open('$WINGS_CONFIG', 'w') as f:
     f.write(content)
@@ -657,7 +655,6 @@ fix_panel() {
     NGINX_AVAILABLE="/etc/nginx/sites-available/pterodactyl.conf"
     NGINX_ENABLED="/etc/nginx/sites-enabled/pterodactyl.conf"
 
-    # Detect PHP version
     PHP_VERSION=$(php -v 2>/dev/null | head -1 | grep -oP 'PHP \K[0-9]+\.[0-9]+')
     if [ -z "$PHP_VERSION" ]; then
         print_error "PHP tidak ditemukan!"
@@ -668,7 +665,6 @@ fix_panel() {
     PHP_FPM_SOCK="/run/php/php${PHP_VERSION}-fpm.sock"
     print_success "Detected PHP version: ${PHP_VERSION}"
 
-    # Get domain
     if [ -f "$PANEL_DIR/.env" ]; then
         DOMAIN=$(grep APP_URL "$PANEL_DIR/.env" | sed 's/APP_URL=//;s/"//g' | sed 's|https\?://||')
     fi
@@ -678,7 +674,6 @@ fix_panel() {
     print_success "Domain: ${DOMAIN}"
     echo ""
 
-    # FIX 1: Nginx config
     echo -e "${YELLOW}[1] Fixing Nginx configuration...${NC}"
     cat > "$NGINX_AVAILABLE" <<EOF
 server {
@@ -727,7 +722,6 @@ EOF
     fi
     print_success "Nginx config fixed & default page removed"
 
-    # FIX 2: .env fixes
     echo -e "${YELLOW}[2] Fixing .env settings...${NC}"
     if [ -f "$PANEL_DIR/.env" ]; then
         sed -i "s|APP_URL=.*|APP_URL=\"http://${DOMAIN}\"|" "$PANEL_DIR/.env"
@@ -738,13 +732,11 @@ EOF
         print_warning ".env tidak ditemukan, skip..."
     fi
 
-    # FIX 3: Permissions
     echo -e "${YELLOW}[3] Fixing file permissions...${NC}"
     chown -R www-data:www-data "$PANEL_DIR"
     chmod -R 755 "$PANEL_DIR/storage" "$PANEL_DIR/bootstrap/cache"
     print_success "Permissions fixed"
 
-    # FIX 4: Clear cache
     echo -e "${YELLOW}[4] Clearing Laravel cache...${NC}"
     cd "$PANEL_DIR"
     php artisan cache:clear
@@ -753,7 +745,6 @@ EOF
     php artisan view:clear
     print_success "Cache cleared"
 
-    # FIX 5: Restart services
     echo -e "${YELLOW}[5] Restarting services...${NC}"
     nginx -t && systemctl restart nginx
     systemctl restart "php${PHP_VERSION}-fpm"
@@ -832,7 +823,232 @@ uninstall_wings() {
     read
 }
 
-# ===== ROOT CHECK =====
+# ===== FIX WINGS =====
+fix_wings() {
+    show_banner
+    echo ""
+    echo -e "${WHITE}┌─ ${GREEN}🔧 FIX / REPAIR PTERODACTYL WINGS${NC} ──────────────────┐${NC}"
+    echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
+    echo ""
+    echo -e "${CYAN}Fixes yang akan dilakukan:${NC}"
+    echo -e "  • Cek & fix SSL certificate"
+    echo -e "  • Cek & fix Docker service"
+    echo -e "  • Cek & fix config.yml"
+    echo -e "  • Cek & fix Wings service file"
+    echo -e "  • Restart Wings"
+    echo ""
+
+    WINGS_CONFIG="/etc/pterodactyl/config.yml"
+    WINGS_SERVICE="/etc/systemd/system/wings.service"
+    WINGS_BIN="/usr/local/bin/wings"
+
+    # Cek wings binary
+    if [ ! -f "$WINGS_BIN" ]; then
+        print_error "Wings binary tidak ditemukan di $WINGS_BIN!"
+        print_warning "Silakan install Wings terlebih dahulu (opsi 2)"
+        echo ""
+        echo -e "${YELLOW}Press Enter to continue...${NC}"
+        read
+        return
+    fi
+    print_success "Wings binary ditemukan"
+
+    # Cek config.yml
+    if [ ! -f "$WINGS_CONFIG" ]; then
+        print_error "config.yml tidak ditemukan!"
+        echo ""
+        echo -e "${CYAN}Paste config command dari Panel (Admin → Nodes → [Node] → Configuration):${NC}"
+        read -r CONFIG_CMD
+        if [[ -n "$CONFIG_CMD" ]]; then
+            mkdir -p /etc/pterodactyl
+            cd /etc/pterodactyl
+            eval "$CONFIG_CMD"
+            print_success "config.yml berhasil dibuat"
+        else
+            print_error "Config command kosong, tidak bisa lanjut!"
+            echo -e "${YELLOW}Press Enter to continue...${NC}"
+            read
+            return
+        fi
+    fi
+    print_success "config.yml ditemukan"
+
+    # ===== FIX 1: SSL =====
+    echo ""
+    echo -e "${YELLOW}[1] Mengecek SSL certificate...${NC}"
+    SSL_ENABLED=$(grep -A3 "ssl:" "$WINGS_CONFIG" | grep "enabled:" | head -1 | awk '{print $2}')
+    CERT_PATH=$(grep "cert:" "$WINGS_CONFIG" | awk '{print $2}' | tr -d '"')
+    KEY_PATH=$(grep "key:" "$WINGS_CONFIG" | awk '{print $2}' | tr -d '"')
+
+    if [[ "$SSL_ENABLED" == "true" ]]; then
+        if [[ ! -f "$CERT_PATH" ]] || [[ ! -f "$KEY_PATH" ]]; then
+            print_warning "SSL aktif tapi certificate tidak ditemukan!"
+            print_warning "cert: $CERT_PATH"
+            print_warning "key:  $KEY_PATH"
+            echo ""
+            echo -e "${CYAN}Pilih solusi:${NC}"
+            echo -e "  ${GREEN}[1]${NC} Buat SSL baru dengan certbot"
+            echo -e "  ${GREEN}[2]${NC} Nonaktifkan SSL sementara"
+            echo -n -e "${WHITE}Pilih [1/2]: ${NC}"
+            read ssl_choice
+
+            if [[ "$ssl_choice" == "1" ]]; then
+                # Extract domain dari cert path
+                NODE_DOMAIN=$(echo "$CERT_PATH" | grep -oP '/live/\K[^/]+')
+                if [ -z "$NODE_DOMAIN" ]; then
+                    read -p "📍 Masukkan domain node (ex: node1.example.com): " NODE_DOMAIN
+                fi
+                print_info "Membuat SSL untuk $NODE_DOMAIN..."
+                # Stop nginx sementara jika port 80 dipakai
+                systemctl stop nginx 2>/dev/null || true
+                certbot certonly --standalone -d "$NODE_DOMAIN" --non-interactive --agree-tos -m "$(gen_email)" 2>&1
+                systemctl start nginx 2>/dev/null || true
+                if [ -f "$CERT_PATH" ]; then
+                    print_success "SSL certificate berhasil dibuat!"
+                else
+                    print_error "Gagal buat SSL, nonaktifkan SSL sebagai fallback..."
+                    python3 -c "
+import re
+with open('$WINGS_CONFIG', 'r') as f:
+    content = f.read()
+content = re.sub(r'(api:.*?ssl:\s*\n\s*)enabled: true', r'\1enabled: false', content, flags=re.DOTALL)
+with open('$WINGS_CONFIG', 'w') as f:
+    f.write(content)
+" 2>/dev/null || sed -i 's/enabled: true/enabled: false/' "$WINGS_CONFIG"
+                    print_warning "SSL dinonaktifkan. Ulangi proses SSL setelah masalah teratasi."
+                fi
+            else
+                print_info "Menonaktifkan SSL di config.yml..."
+                python3 -c "
+import re
+with open('$WINGS_CONFIG', 'r') as f:
+    content = f.read()
+content = re.sub(r'(api:.*?ssl:\s*\n\s*)enabled: true', r'\1enabled: false', content, flags=re.DOTALL)
+with open('$WINGS_CONFIG', 'w') as f:
+    f.write(content)
+" 2>/dev/null || sed -i 's/enabled: true/enabled: false/' "$WINGS_CONFIG"
+                print_success "SSL dinonaktifkan di config.yml"
+                print_warning "Jangan lupa update Node di Panel: set 'Not Behind Proxy' & pakai port 8080"
+            fi
+        else
+            print_success "SSL certificate OK: $CERT_PATH"
+        fi
+    else
+        print_info "SSL tidak aktif, skip cek certificate"
+    fi
+
+    # ===== FIX 2: Docker =====
+    echo ""
+    echo -e "${YELLOW}[2] Mengecek Docker...${NC}"
+    if ! systemctl is-active --quiet docker; then
+        print_warning "Docker tidak berjalan! Mencoba start..."
+        systemctl start docker
+        sleep 3
+        if systemctl is-active --quiet docker; then
+            print_success "Docker berhasil distart!"
+        else
+            print_error "Docker gagal start! Install ulang Docker:"
+            echo -e "  ${CYAN}curl -fsSL https://get.docker.com | bash${NC}"
+        fi
+    else
+        print_success "Docker berjalan normal"
+    fi
+
+    # ===== FIX 3: Wings service file =====
+    echo ""
+    echo -e "${YELLOW}[3] Mengecek Wings service file...${NC}"
+    if [ ! -f "$WINGS_SERVICE" ]; then
+        print_warning "Wings service file tidak ada! Membuat ulang..."
+        cat > "$WINGS_SERVICE" <<EOF
+[Unit]
+Description=Pterodactyl Wings Daemon
+After=docker.service
+Requires=docker.service
+PartOf=docker.service
+
+[Service]
+User=root
+WorkingDirectory=/etc/pterodactyl
+LimitNOFILE=4096
+PIDFile=/var/run/wings/daemon.pid
+ExecStart=/usr/local/bin/wings
+Restart=on-failure
+StartLimitInterval=180
+StartLimitBurst=30
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        systemctl daemon-reload
+        systemctl enable wings
+        print_success "Wings service file dibuat ulang"
+    else
+        print_success "Wings service file OK"
+    fi
+
+    # ===== FIX 4: Direktori & Permission =====
+    echo ""
+    echo -e "${YELLOW}[4] Mengecek direktori & permission...${NC}"
+    mkdir -p /var/lib/pterodactyl/volumes
+    mkdir -p /var/lib/pterodactyl/archives
+    mkdir -p /var/lib/pterodactyl/backups
+    mkdir -p /tmp/pterodactyl
+    mkdir -p /var/log/pterodactyl
+    chmod -R 755 /var/lib/pterodactyl
+    chmod 600 "$WINGS_CONFIG"
+    print_success "Direktori & permission OK"
+
+    # ===== FIX 5: Test config & restart =====
+    echo ""
+    echo -e "${YELLOW}[5] Test config & restart Wings...${NC}"
+    print_info "Menjalankan wings diagnostics..."
+    $WINGS_BIN diagnostics 2>/dev/null || true
+
+    systemctl daemon-reload
+    systemctl restart wings
+    sleep 4
+
+    if systemctl is-active --quiet wings; then
+        print_success "Wings is RUNNING! ✅"
+        echo ""
+        echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+        echo -e "${GREEN}✅ Wings berhasil diperbaiki dan berjalan normal!${NC}"
+        echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+    else
+        print_error "Wings masih gagal start!"
+        echo ""
+        echo -e "${CYAN}Log error:${NC}"
+        journalctl -u wings -n 30 --no-pager 2>/dev/null || \
+            $WINGS_BIN --debug 2>&1 | head -30 || true
+        echo ""
+        echo -e "${YELLOW}Tips tambahan:${NC}"
+        echo -e "  • Cek remote URL di config.yml sudah benar (pakai http/https sesuai panel)"
+        echo -e "  • Cek token di config.yml masih valid (generate ulang di Panel jika perlu)"
+        echo -e "  • Jalankan manual: ${CYAN}wings --debug${NC}"
+    fi
+
+    echo ""
+    echo -e "${YELLOW}Press Enter to continue...${NC}"
+    read
+}
+
+# ===== INSTALL DATABASE WEBSITE =====
+install_database() {
+    show_banner
+    echo ""
+    echo -e "${WHITE}┌─ ${CYAN}🗄️  INSTALL DATABASE WEBSITE${NC} ───────────────────────┐${NC}"
+    echo -e "${WHITE}└────────────────────────────────────────────────────────────┘${NC}"
+    echo ""
+    echo -e "${CYAN}Menjalankan installer database website...${NC}"
+    echo ""
+    bash <(curl -s https://raw.githubusercontent.com/Paell-stunY/how-to-install-database-in-pterodactyl/refs/heads/main/install.sh)
+    echo ""
+    echo -e "${YELLOW}Press Enter to continue...${NC}"
+    read
+}
+
+
 if [ "$EUID" -ne 0 ]; then
     echo -e "${RED}This script must be run as root!${NC}"
     echo "Usage: sudo bash installpanel.sh"
@@ -856,6 +1072,8 @@ while true; do
         10) uninstall_panel ;;
         11) fix_panel ;;
         12) uninstall_wings ;;
+        13) fix_wings ;;
+        14) install_database ;;
         x|X)
             clear
             show_banner
